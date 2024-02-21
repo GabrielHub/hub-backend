@@ -1,41 +1,39 @@
-import admin from "firebase-admin";
-import dayjs from "dayjs";
-import round from "../../utils/roundForReadable";
-import { PlayerData } from "../../types";
+import admin from 'firebase-admin';
+import dayjs from 'dayjs';
+import { PlayerData } from '../../types';
+import { round } from 'lodash';
 
 const STATS_TO_ADD = [
-  "pts",
-  "treb",
-  "dreb",
-  "oreb",
-  "ast",
-  "stl",
-  "blk",
-  "tov",
-  "pf",
-  "ortg",
-  "drtg",
-  "fga",
-  "fgm",
-  "threepa",
-  "threepm",
-  "threepAR",
-  "fta",
-  "ftm",
-  "pace",
-  "gameScore",
-  "usageRate",
+  'pts',
+  'treb',
+  'dreb',
+  'oreb',
+  'ast',
+  'stl',
+  'blk',
+  'tov',
+  'pf',
+  'ortg',
+  'drtg',
+  'fga',
+  'fgm',
+  'threepa',
+  'threepm',
+  'threepAR',
+  'fta',
+  'ftm',
+  'pace',
+  'gameScore',
+  'usageRate'
 ];
 
 /**
  * @description finds amount to divide by for stats that aren't valid across all players (APER and PACE)
  * @param {*} playerList
- * @returns
+ * @param {*} stat
+ * @return {number}
  */
-const getMissingStatAmount = (
-  playerList: PlayerData[],
-  stat: string,
-): number => {
+const getMissingStatAmount = (playerList: PlayerData[], stat: string): number => {
   return playerList.reduce((count, player) => {
     if (player?.[stat]) {
       return count + 1;
@@ -48,10 +46,10 @@ const generateLeagueAverage = async (): Promise<null> => {
   const db = admin.firestore();
 
   // * Missing Data, data that may not be there for all players
-  const MISSING_DATA = ["pace", "aPER"];
+  const MISSING_DATA = ['pace', 'aPER'];
 
   try {
-    const querySnapshot = await db.collection("players").get();
+    const querySnapshot = await db.collection('players').get();
 
     const playerList: PlayerData[] = [];
     querySnapshot.docs.forEach((doc) => {
@@ -66,7 +64,7 @@ const generateLeagueAverage = async (): Promise<null> => {
     const averageGameStats = {
       /** Set league average PER to 15 as per Hollinger https://www.basketball-reference.com/about/per.html  */
       PER: 15,
-      aPER: 0,
+      aPER: 0
     };
     STATS_TO_ADD.forEach((stat) => {
       averageGameStats[stat] = 0;
@@ -86,9 +84,7 @@ const generateLeagueAverage = async (): Promise<null> => {
         const paceLength = getMissingStatAmount(playerList, stat);
         averageGameStats[stat] = round(averageGameStats[stat] / paceLength);
       } else {
-        averageGameStats[stat] = round(
-          averageGameStats[stat] / playerList.length,
-        );
+        averageGameStats[stat] = round(averageGameStats[stat] / playerList.length);
       }
     });
 
@@ -104,11 +100,11 @@ const generateLeagueAverage = async (): Promise<null> => {
     const aPER = sumOfAPER / gamesWithAPER;
     averageGameStats.aPER = aPER;
 
-    await db.collection("league").add({
+    await db.collection('league').add({
       ...averageGameStats,
       players: playerList.length,
       // * Store each league average as historical data
-      createdAt: dayjs().format("YYYY-MM-DD"),
+      createdAt: dayjs().format('YYYY-MM-DD')
     });
 
     return null;

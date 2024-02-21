@@ -1,4 +1,4 @@
-const roundForReadable = (value: number, precision: number = 1): number => {
+export const roundForReadable = (value: number, precision = 1): number => {
   if (value === 0) {
     return 0;
   }
@@ -6,4 +6,4 @@ const roundForReadable = (value: number, precision: number = 1): number => {
   return Math.round(value * multiplier) / multiplier;
 };
 
-export default roundForReadable;
+export default {};

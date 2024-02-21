@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
 import { Request, Response } from 'express';
-import findSimilarPlayers from '../utils/findSimilarPlayers';
+import { findSimilarPlayers } from '../utils';
 import { PlayerData } from '../types';
 
 /**

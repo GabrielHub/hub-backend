@@ -1,5 +1,5 @@
-import { Response } from "express";
-import admin from "firebase-admin";
+import { Response } from 'express';
+import admin from 'firebase-admin';
 
 interface IGameData {
   id: string;
@@ -10,19 +10,19 @@ interface IGameData {
 const fetchLastGame = async (req: any, res: Response): Promise<void> => {
   const { playerID, numOfGames } = req.query;
 
-  if (!playerID || typeof playerID !== "string") {
-    throw new Error("Invalid player passed");
+  if (!playerID || typeof playerID !== 'string') {
+    throw new Error('Invalid player passed');
   }
 
   const formattedNumOfGames = parseInt(numOfGames, 10);
 
-  if (!formattedNumOfGames || typeof formattedNumOfGames !== "number") {
-    throw new Error("Invalid number of games");
+  if (!formattedNumOfGames || typeof formattedNumOfGames !== 'number') {
+    throw new Error('Invalid number of games');
   }
 
   const db = admin.firestore();
   const playerData = await db
-    .collection("players")
+    .collection('players')
     .doc(playerID)
     .get()
     .then((doc) => {
@@ -33,16 +33,16 @@ const fetchLastGame = async (req: any, res: Response): Promise<void> => {
     });
 
   if (!playerData) {
-    throw new Error("Player data does not exist");
+    throw new Error('Player data does not exist');
   }
 
   // * Fetch last number of games
   const lastGames: IGameData[] = [];
 
   await db
-    .collection("games")
-    .where("name", "in", playerData.alias)
-    .orderBy("_updatedAt", "desc")
+    .collection('games')
+    .where('name', 'in', playerData.alias)
+    .orderBy('_updatedAt', 'desc')
     .limit(formattedNumOfGames)
     .get()
     .then((querySnapshot) => {

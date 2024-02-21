@@ -1,4 +1,4 @@
-import { NBAPlayerData, PlayerData, SimilarPlayer } from "../types";
+import { NBAPlayerData, PlayerData, SimilarPlayer } from '../types';
 
 const weights = {
   pts: 0.9,
@@ -12,12 +12,10 @@ const weights = {
   threepa: 1.5,
   threepm: 1,
   tov: 1,
-  pf: 0.4,
+  pf: 0.4
 };
 
-/**
- * @description Normalize NBA stats to 20 min per game
- */
+// * Normalize NBA stats to 20 min per game
 const normalizeStats = (stat: number, min: number, gp: number): number => {
   const minPlayed = min / gp;
   return (stat / minPlayed) * 20;
@@ -27,11 +25,11 @@ const normalizeStats = (stat: number, min: number, gp: number): number => {
  * @description finds the most similar nba players to a 2k player and returns closest 3
  * @param {*} player player data
  * @param {*} nbaPlayers Array of nba player data
- * @returns Array of 3 most similar players
+ * @return {SimilarPlayer[]} Array of 3 most similar players
  */
 export const findSimilarPlayers = (
   player: PlayerData,
-  nbaPlayers: NBAPlayerData[],
+  nbaPlayers: NBAPlayerData[]
 ): SimilarPlayer[] => {
   // * Calculate the weighted Euclidean distance between the given player and all the players in the NBA array
   const distances = nbaPlayers.map((nbaPlayer) => {
@@ -49,34 +47,21 @@ export const findSimilarPlayers = (
       threepa,
       threepm,
       tov,
-      PF: pf,
+      PF: pf
     } = nbaPlayer;
 
-    const ptsDiff =
-      (weights.pts * (player.pts - normalizeStats(pts, mp, gp))) ** 2;
-    const rebDiff =
-      (weights.treb * (player.treb - normalizeStats(trb, mp, gp))) ** 2;
-    const astDiff =
-      (weights.ast * (player.ast - normalizeStats(ast, mp, gp))) ** 2;
-    const stlDiff =
-      (weights.stl * (player.stl - normalizeStats(stl, mp, gp))) ** 2;
-    const blkDiff =
-      (weights.blk * (player.blk - normalizeStats(blk, mp, gp))) ** 2;
+    const ptsDiff = (weights.pts * (player.pts - normalizeStats(pts, mp, gp))) ** 2;
+    const rebDiff = (weights.treb * (player.treb - normalizeStats(trb, mp, gp))) ** 2;
+    const astDiff = (weights.ast * (player.ast - normalizeStats(ast, mp, gp))) ** 2;
+    const stlDiff = (weights.stl * (player.stl - normalizeStats(stl, mp, gp))) ** 2;
+    const blkDiff = (weights.blk * (player.blk - normalizeStats(blk, mp, gp))) ** 2;
 
-    const fgaDiff =
-      (weights.fga * (player.fga - normalizeStats(fga, mp, gp))) ** 2;
-    const fgmDiff =
-      (weights.fgm * (player.fgm - normalizeStats(fgm, mp, gp))) ** 2;
-    const twopaDiff =
-      (weights.twopa * (player.twopa - normalizeStats(twopa, mp, gp))) ** 2;
-    const threepaDiff =
-      (weights.threepa * (player.threepa - normalizeStats(threepa, mp, gp))) **
-      2;
-    const threepmDiff =
-      (weights.threepm * (player.threepm - normalizeStats(threepm, mp, gp))) **
-      2;
-    const tovDiff =
-      (weights.tov * (player.tov - normalizeStats(tov, mp, gp))) ** 2;
+    const fgaDiff = (weights.fga * (player.fga - normalizeStats(fga, mp, gp))) ** 2;
+    const fgmDiff = (weights.fgm * (player.fgm - normalizeStats(fgm, mp, gp))) ** 2;
+    const twopaDiff = (weights.twopa * (player.twopa - normalizeStats(twopa, mp, gp))) ** 2;
+    const threepaDiff = (weights.threepa * (player.threepa - normalizeStats(threepa, mp, gp))) ** 2;
+    const threepmDiff = (weights.threepm * (player.threepm - normalizeStats(threepm, mp, gp))) ** 2;
+    const tovDiff = (weights.tov * (player.tov - normalizeStats(tov, mp, gp))) ** 2;
     const pfDiff = (weights.pf * (player.pf - normalizeStats(pf, mp, gp))) ** 2;
 
     const distance = Math.sqrt(
@@ -91,7 +76,7 @@ export const findSimilarPlayers = (
         threepaDiff +
         threepmDiff +
         tovDiff +
-        pfDiff,
+        pfDiff
     );
 
     return { player: nbaPlayer, distance };
@@ -107,4 +92,4 @@ export const findSimilarPlayers = (
   });
 };
 
-export default findSimilarPlayers;
+export default {};

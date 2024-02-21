@@ -15,3 +15,5 @@ export const corsOptionsDelegate = (
   }
   callback(null, corsOptions); // callback expects two parameters: error and options
 };
+
+export default {};

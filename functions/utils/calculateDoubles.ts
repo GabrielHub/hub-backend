@@ -4,12 +4,12 @@ type DoublesResult = {
   qd: number;
 };
 
-const calculateDoubles = (
+export const calculateDoubles = (
   points: number,
   rebounds: number,
   assists: number,
   steals: number,
-  blocks: number,
+  blocks: number
 ): DoublesResult => {
   const stats = [points, rebounds, assists, steals, blocks];
   let count = 0;
@@ -23,8 +23,8 @@ const calculateDoubles = (
   return {
     dd: count === 2 ? 1 : 0,
     td: count === 3 ? 1 : 0,
-    qd: count === 4 ? 1 : 0,
+    qd: count === 4 ? 1 : 0
   };
 };
 
-export default calculateDoubles;
+export default {};

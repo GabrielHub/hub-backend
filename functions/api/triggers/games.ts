@@ -1,7 +1,8 @@
 import admin from 'firebase-admin';
 import functions from 'firebase-functions';
-import calculateAveragePlayerStats from '../../utils/calculateAveragePlayerStats';
+import { calculateAveragePlayerStats } from '../../utils';
 import { GameData, LeagueData, PlayerData } from '../../types';
+import { DEFAULT_FT_PERC, MIN_GAMES } from '../../constants';
 
 const GAME_TRIGGER_STATUS_ENUMS = {
   IN_PROGRESS: 'in-progress',
@@ -10,7 +11,7 @@ const GAME_TRIGGER_STATUS_ENUMS = {
 };
 
 // * Update players when games are added
-const upsertPlayerData = async (snapshot: any) => {
+export const upsertPlayerData = async (snapshot: any) => {
   const data = snapshot.after.data();
   const { name, gameTrigger } = data;
   const gameRef = snapshot.after.ref;
@@ -44,7 +45,7 @@ const upsertPlayerData = async (snapshot: any) => {
       await db.collection('players').add({
         name,
         alias: [name],
-        ftPerc: 70,
+        ftPerc: DEFAULT_FT_PERC,
         _createdAt: admin.firestore.Timestamp.now(),
         _updatedAt: admin.firestore.Timestamp.now()
       });
@@ -73,9 +74,9 @@ const upsertPlayerData = async (snapshot: any) => {
 
       const { name: storedName, alias, ftPerc, id } = playerData;
 
-      // * Only calculate averages once a player has at least 5 games
+      // * Only calculate averages once a player has min games played
       const gameDataRef = await db.collection('games').where('name', 'in', alias).get();
-      if (gameDataRef.size >= 5) {
+      if (gameDataRef.size >= MIN_GAMES) {
         const gameData = gameDataRef.docs.map((doc) => doc.data() as GameData);
         const avgPlayerStats = calculateAveragePlayerStats(
           leagueData,
@@ -123,4 +124,4 @@ const upsertPlayerData = async (snapshot: any) => {
   }
 };
 
-export default upsertPlayerData;
+export default {};

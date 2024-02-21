@@ -1,17 +1,17 @@
-import admin from "firebase-admin";
-import _ from "lodash";
-import calculateTwoPointers from "../utils/calculateTwoPointers";
-import calculateFreeThrowsMade from "../utils/calculateFreeThrows";
-import calculateDoubles from "../utils/calculateDoubles";
-import calculateAdvancedOffensiveStats from "../utils/calculateAdvancedOffensiveStats";
-import calculateAdvancedDefensiveStats from "../utils/calculateAdvancedDefensiveStats";
-import getExpectedORebounds from "../utils/getExpectedORebounds";
-import estimateFreeThrowAttempts from "../utils/estimateFreeThrowAttempts";
-import { calculateAPER } from "../utils/calculatePER";
-import { UPLOAD_KEY } from "../constants";
-import { LeagueData, PlayerData } from "../types";
-
-const DEFAULT_FT_PERC = 67;
+import admin from 'firebase-admin';
+import _ from 'lodash';
+import {
+  calculateAPER,
+  calculateAdvancedDefensiveStats,
+  calculateAdvancedOffensiveStats,
+  calculateDoubles,
+  calculateFreeThrowsMade,
+  calculateTwoPointers,
+  estimateFreeThrowAttempts,
+  getExpectedORebounds
+} from '../utils';
+import { DEFAULT_FT_PERC, UPLOAD_KEY } from '../constants';
+import { LeagueData, PlayerData } from '../types';
 
 // ? Used to estimate OREB
 const FG_OREB_PERC = 0.22;
@@ -25,8 +25,8 @@ interface PlayerFTData {
 const uploadStats = async (req: any, res: any): Promise<void> => {
   const { rawTeamData, rawPlayerData, key } = req.body;
 
-  if (!key || typeof key !== "string" || key !== UPLOAD_KEY) {
-    throw Error("Invalid request parameters");
+  if (!key || typeof key !== 'string' || key !== UPLOAD_KEY) {
+    throw Error('Invalid request parameters');
   }
 
   const formattedTeamData = {};
@@ -37,8 +37,8 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
   const db = admin.firestore();
   // * Fetch league data for PER
   const league = await db
-    .collection("league")
-    .orderBy("createdAt", "desc")
+    .collection('league')
+    .orderBy('createdAt', 'desc')
     .limit(1)
     .get()
     .then((querySnapshot) => {
@@ -54,8 +54,8 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
   const playerNames = rawPlayerData.map(({ name }) => name);
   const playerFT: PlayerFTData[] = [];
   await db
-    .collection("players")
-    .where("alias", "array-contains-any", playerNames)
+    .collection('players')
+    .where('alias', 'array-contains-any', playerNames)
     .get()
     .then((querySnapshot) => {
       querySnapshot.forEach((doc) => {
@@ -71,8 +71,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     const { twopm } = calculateTwoPointers(fga, fgm, threepa, threepm);
     const ftm = calculateFreeThrowsMade(pts, twopm, threepm);
     // * We cannot get the FTA without knowing FT%, so find it if the player exists and has a default FT Perc
-    const { ftPerc = DEFAULT_FT_PERC } =
-      playerFT.find(({ alias }) => alias.includes(name)) || {};
+    const { ftPerc = DEFAULT_FT_PERC } = playerFT.find(({ alias }) => alias.includes(name)) || {};
     const fta = ftm === 0 ? 0 : estimateFreeThrowAttempts(ftm, ftPerc);
     // * Name : {fta, team}
     playerFreeThrowData[name] = { fta, team };
@@ -84,7 +83,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
       acc[team] = (acc[team] || 0) + fta;
       return acc;
     },
-    {} as Record<string, number>,
+    {} as Record<string, number>
   );
 
   // * Calculate oreb for both teams first (estimations) then set basic stats
@@ -95,15 +94,13 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     const missed2P = fga - fgm - missed3P;
 
     // * Estimate OREB
-    const expected = Math.floor(
-      missed3P * THREEP_OREB_PERC + missed2P * FG_OREB_PERC,
-    );
+    const expected = Math.floor(missed3P * THREEP_OREB_PERC + missed2P * FG_OREB_PERC);
     const oreb = getExpectedORebounds(reb, expected);
     const dreb = Math.abs(reb - oreb);
 
     teamReboundData[teamKey] = {
       dreb,
-      oreb,
+      oreb
     };
   });
 
@@ -124,8 +121,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     const opFTA = teamFreeThrowData?.[opponent.team] || 1;
 
     const { dreb, oreb } = teamReboundData[teamKey];
-    const ORBPerc =
-      oreb / (oreb + (opponent.reb + teamReboundData[opponent.team].oreb));
+    const ORBPerc = oreb / (oreb + (opponent.reb + teamReboundData[opponent.team].oreb));
 
     // * Possessions
     const scoringPoss = fgm + (1 - (1 - (ftm / fta) ** 2)) * fta * 0.4;
@@ -143,8 +139,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     // * ORTG Necessary calculations
     const playPerc = scoringPoss / (fga + fta * 0.4 + tov);
     const ORBWeight =
-      ((1 - ORBPerc) * playPerc) /
-      ((1 - ORBPerc) * playPerc + ORBPerc * (1 - playPerc));
+      ((1 - ORBPerc) * playPerc) / ((1 - ORBPerc) * playPerc + ORBPerc * (1 - playPerc));
 
     // * Randomly assign offensive rebounds to individual players
     const playersOnTeam = _.shuffle(
@@ -152,12 +147,12 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
         // * Sometimes team is a number... sometimes it's a string ugh
         // eslint-disable-next-line eqeqeq
         return team == teamKey && treb > 0;
-      }),
+      })
     );
 
     playersOnTeam.forEach((player) => {
       playerReboundData[player.name] = {
-        oreb: 0,
+        oreb: 0
       };
     });
 
@@ -189,7 +184,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
       scoringPoss,
       playPerc,
       ORBWeight,
-      mp,
+      mp
     };
   });
 
@@ -209,14 +204,12 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
       fgm,
       fga,
       threepm,
-      threepa,
+      threepa
     } = playerData;
 
     // * Team data ( might be a waste of space...? )
     const team = formattedTeamData[teamKey];
-    const opponent = rawPlayerData.find(
-      (player) => player.pos === pos && player.team !== teamKey,
-    );
+    const opponent = rawPlayerData.find((player) => player.pos === pos && player.team !== teamKey);
 
     // * minutes played
     const mp = 20;
@@ -232,6 +225,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     const { dd, td, qd } = calculateDoubles(pts, treb, ast, stl, blk);
 
     // * Add simple stats to player object
+    // eslint-disable-next-line prefer-const
     formattedPlayer = {
       ...playerData,
       pace: team.totalPoss,
@@ -244,7 +238,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
       fta,
       dd,
       td,
-      qd,
+      qd
     };
 
     // * Calculate advanced offensive stats
@@ -253,15 +247,15 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
 
     const opOREB = playerReboundData[opponent.name]?.oreb || 0;
     // * Calculate advanced defensive stats
-    const { drtg, drebPerc, oFGA, oFGM, o3PA, o3PM } =
-      calculateAdvancedDefensiveStats(formattedPlayer, opponent, opOREB, team);
+    const { drtg, drebPerc, oFGA, oFGM, o3PA, o3PM } = calculateAdvancedDefensiveStats(
+      formattedPlayer,
+      opponent,
+      opOREB,
+      team
+    );
 
     // * Calculate PER
-    const { aPER, PER: playerPER } = calculateAPER(
-      formattedPlayer,
-      team,
-      league,
-    );
+    const { aPER, PER: playerPER } = calculateAPER(formattedPlayer, team, league);
 
     return {
       ...formattedPlayer,
@@ -278,24 +272,24 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
       usageRate,
       gameScore,
       drtg,
-      drebPerc,
+      drebPerc
     };
   });
 
   // * Batch writes
   const batch = admin.firestore().batch();
   formattedPlayerData.forEach((player) => {
-    const gamesRef = admin.firestore().collection("games").doc();
+    const gamesRef = admin.firestore().collection('games').doc();
     batch.set(gamesRef, {
       ...player,
       _createdAt: admin.firestore.Timestamp.now(),
-      _updatedAt: admin.firestore.Timestamp.now(),
+      _updatedAt: admin.firestore.Timestamp.now()
     });
   });
 
   await batch.commit().then((docRef) => {
     // eslint-disable-next-line no-console
-    console.log("Document written with ID: ", docRef);
+    console.log('Document written with ID: ', docRef);
   });
 
   res.json({ formattedPlayerData, formattedTeamData });

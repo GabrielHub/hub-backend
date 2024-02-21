@@ -1,6 +1,6 @@
-import admin from "firebase-admin";
-import NodeCache from "node-cache";
-import { Request, Response } from "express";
+import admin from 'firebase-admin';
+import NodeCache from 'node-cache';
+import { Request, Response } from 'express';
 
 const cache = new NodeCache({ stdTTL: 3599 });
 
@@ -9,18 +9,15 @@ interface ILeagueData {
 }
 
 // * Fetches players for table
-const fetchLeagueAverages = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  if (cache.has("leagueData")) {
-    res.send(cache.get("leagueData"));
+const fetchLeagueAverages = async (req: Request, res: Response): Promise<void> => {
+  if (cache.has('leagueData')) {
+    res.send(cache.get('leagueData'));
   } else {
     const db = admin.firestore();
 
     const league: ILeagueData = await db
-      .collection("league")
-      .orderBy("createdAt", "desc")
+      .collection('league')
+      .orderBy('createdAt', 'desc')
       .limit(1)
       .get()
       .then((querySnapshot) => {
@@ -32,7 +29,7 @@ const fetchLeagueAverages = async (
         return leagueData[0];
       });
 
-    cache.set("leagueData", league);
+    cache.set('leagueData', league);
     res.send(league);
   }
 };

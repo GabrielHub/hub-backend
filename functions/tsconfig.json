@@ -12,5 +12,5 @@
     "skipLibCheck": true
   },
   "compileOnSave": true,
-  "include": ["src", ".eslintrc.js", "utils", "constants.ts"],
+  "include": ["src", ".eslintrc.js", "utils", "constants.ts"]
 }

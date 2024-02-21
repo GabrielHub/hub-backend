@@ -1,8 +1,8 @@
-const calculateTwoPointers = (
+export const calculateTwoPointers = (
   fga: number,
   fgm: number,
   threePA: number,
-  threePM: number,
+  threePM: number
 ): { twopa: number; twopm: number } => {
   // * Calculate the number of 2-pointers attempted by subtracting the 3-pointers attempted from the total field goals attempted
   const twoPA = fga - threePA;
@@ -11,8 +11,8 @@ const calculateTwoPointers = (
   // * Return an object with the 2-pointers attempted and 2-pointers made
   return {
     twopa: twoPA,
-    twopm: twoPM,
+    twopm: twoPM
   };
 };
 
-export default calculateTwoPointers;
+export default {};
