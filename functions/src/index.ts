@@ -17,7 +17,7 @@ import fetchLeagueAverages from '../api/fetchLeagueAverages';
 import compareToNBA from '../api/compareToNBA';
 
 // * Cloud triggers
-import upsertPlayerData from '../api/triggers/games';
+import { upsertPlayerData } from '../api/triggers/games';
 
 // * Cron jobs
 import deleteDuplicateGames from '../api/scheduled/deleteDuplicateGames';
