@@ -4,7 +4,13 @@ type DoublesResult = {
   qd: number;
 };
 
-const calculateDoubles = (points: number, rebounds: number, assists: number, steals: number, blocks: number): DoublesResult => {
+const calculateDoubles = (
+  points: number,
+  rebounds: number,
+  assists: number,
+  steals: number,
+  blocks: number,
+): DoublesResult => {
   const stats = [points, rebounds, assists, steals, blocks];
   let count = 0;
 
@@ -17,7 +23,7 @@ const calculateDoubles = (points: number, rebounds: number, assists: number, ste
   return {
     dd: count === 2 ? 1 : 0,
     td: count === 3 ? 1 : 0,
-    qd: count === 4 ? 1 : 0
+    qd: count === 4 ? 1 : 0,
   };
 };
 

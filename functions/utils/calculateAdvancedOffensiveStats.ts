@@ -1,13 +1,17 @@
-import { PlayerData, TeamData } from '../types';
+import { PlayerData, TeamData } from "../types";
 
-export const calculateAdvancedOffensiveStats = (player: PlayerData, team: TeamData) => {
+export const calculateAdvancedOffensiveStats = (
+  player: PlayerData,
+  team: TeamData,
+) => {
   // * Calculating advanced offensive stats (we only calculate the advanced stats that require opponent or team numbers)
   // * Stats that do not require opponent or team info we can average elsewhere
 
   const ftDivision = player.fta !== 0 ? player.ftm / player.fta : 1; // * Need to prevent division by 0
 
   const qAst =
-    (player.mp / (team.mp / 5)) * (1.14 * ((team.ast - player.ast) / team.fgm)) +
+    (player.mp / (team.mp / 5)) *
+      (1.14 * ((team.ast - player.ast) / team.fgm)) +
     (((team.ast / team.mp) * player.mp * 5 - player.ast) /
       ((team.fgm / team.mp) * player.mp * 5 - player.fgm)) *
       (1 - player.mp / (team.mp / 5));
@@ -16,10 +20,13 @@ export const calculateAdvancedOffensiveStats = (player: PlayerData, team: TeamDa
   const missedFGPoss = (player.fga - player.fgm) * (1 - 1.07 * team.ORBPerc);
   const missedFTPoss = (1 - ftDivision) ** 2 * 0.4 * player.fta;
 
-  const fgPart = player.fgm * (1 - 0.5 * ((player.pts - player.ftm) / (2 * player.fga)) * qAst);
+  const fgPart =
+    player.fgm *
+    (1 - 0.5 * ((player.pts - player.ftm) / (2 * player.fga)) * qAst);
   const astPart =
     0.5 *
-    ((team.pts - team.ftm - (player.pts - player.ftm)) / (2 * (team.fga - player.fga))) *
+    ((team.pts - team.ftm - (player.pts - player.ftm)) /
+      (2 * (team.fga - player.fga))) *
     player.ast;
   const ftPart = (1 - (1 - ftDivision)) ** 2 * 0.4 * player.fta;
   const orbPart = player.oreb * team.ORBWeight * team.playPerc;
@@ -38,9 +45,11 @@ export const calculateAdvancedOffensiveStats = (player: PlayerData, team: TeamDa
 
   const pProdAstPart =
     2 *
-    ((team.fgm - player.fgm + 0.5 * (team.threepm - player.threepm)) / (team.fgm - player.fgm)) *
+    ((team.fgm - player.fgm + 0.5 * (team.threepm - player.threepm)) /
+      (team.fgm - player.fgm)) *
     0.5 *
-    ((team.pts - team.ftm - (player.pts - player.ftm)) / (2 * (team.fga - player.fga))) *
+    ((team.pts - team.ftm - (player.pts - player.ftm)) /
+      (2 * (team.fga - player.fga))) *
     player.ast;
 
   const pProdORBPart =
@@ -61,10 +70,12 @@ export const calculateAdvancedOffensiveStats = (player: PlayerData, team: TeamDa
   const floorPerc = 100 * (scoringPoss / totalPoss);
 
   // * Ast%: estimates, not calculates) what percentage of made shots by teammates were assisted by a player while he was on the floor.
-  const astPerc = 100 * (player.ast / ((player.mp / (team.mp / 5)) * team.fgm - player.fgm));
+  const astPerc =
+    100 * (player.ast / ((player.mp / (team.mp / 5)) * team.fgm - player.fgm));
 
   // * tovPerc: the number of turnovers a player will make in 100 individual plays
-  const tovPerc = 100 * (player.tov / (player.fga + 0.44 * player.fta + player.tov));
+  const tovPerc =
+    100 * (player.tov / (player.fga + 0.44 * player.fta + player.tov));
 
   // * usageRate
   const usageRate =

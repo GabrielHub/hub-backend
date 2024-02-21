@@ -1,4 +1,4 @@
-import poisson from '@stdlib/random/base/poisson';
+import poisson from "@stdlib/random/base/poisson";
 
 // TODO This sometimes generates a fta that is like 200, make sure this doesn't happen...
 

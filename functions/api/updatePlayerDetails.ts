@@ -1,5 +1,5 @@
-import admin from 'firebase-admin';
-import { Request, Response } from 'express';
+import admin from "firebase-admin";
+import { Request, Response } from "express";
 
 interface IRequestBody {
   playerID: string;
@@ -10,11 +10,14 @@ interface IRequestBody {
 
 type IRequest = Request & {
   body: IRequestBody;
-}
+};
 
 // TODO This is updated on the honor system... there must be some way to authenticate without logging in?
 // * For individual player pages (FT% and alias only)
-const updatePlayerDetails = async (req: IRequest, res: Response): Promise<void> => {
+const updatePlayerDetails = async (
+  req: IRequest,
+  res: Response,
+): Promise<void> => {
   // * aliasesToAdd only contains the new aliases to check against the database
   // * alias is the existing alias array
   const { playerID, ftPerc, alias, aliasesToAdd = [] } = req.body;
@@ -22,12 +25,12 @@ const updatePlayerDetails = async (req: IRequest, res: Response): Promise<void> 
   // * Sanitize FT format
   const formattedFT = parseInt(ftPerc, 10);
 
-  if (!playerID || typeof playerID !== 'string') {
-    throw new Error('Invalid player passed');
+  if (!playerID || typeof playerID !== "string") {
+    throw new Error("Invalid player passed");
   }
 
   if (!ftPerc || Number.isNaN(formattedFT)) {
-    throw new Error('Invalid ftPerc');
+    throw new Error("Invalid ftPerc");
   }
 
   const db = admin.firestore();
@@ -35,26 +38,26 @@ const updatePlayerDetails = async (req: IRequest, res: Response): Promise<void> 
   if (aliasesToAdd.length) {
     // * Trim inputs for whitespace and validate types
     const formattedAlias = aliasesToAdd.map((name) => {
-      if (typeof name !== 'string') {
-        throw new Error('Invalid aliases');
+      if (typeof name !== "string") {
+        throw new Error("Invalid aliases");
       }
       return name.trim();
     });
 
     // * Make sure alias is unique
     const querySnapshot = await db
-      .collection('players')
-      .where('alias', 'array-contains-any', formattedAlias)
+      .collection("players")
+      .where("alias", "array-contains-any", formattedAlias)
       .get();
     if (querySnapshot.size) {
-      throw new Error(`Aliases already exist`);
+      throw new Error("Aliases already exist");
     }
   }
 
   const aliasesToUpdate = [...alias, ...aliasesToAdd];
-  await db.collection('players').doc(playerID).update({
+  await db.collection("players").doc(playerID).update({
     alias: aliasesToUpdate,
-    ftPerc: formattedFT
+    ftPerc: formattedFT,
   });
 
   res.send(aliasesToUpdate);

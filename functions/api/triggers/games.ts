@@ -1,5 +1,5 @@
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
+import admin from 'firebase-admin';
+import functions from 'firebase-functions';
 import calculateAveragePlayerStats from '../../utils/calculateAveragePlayerStats';
 import { GameData, LeagueData, PlayerData } from '../../types';
 
@@ -68,7 +68,7 @@ const upsertPlayerData = async (snapshot: any) => {
       // * There could theoretically be bad data, and an alias could be in multiple players. Avoid this by taking the first
       // TODO Error notifications/logs if there are more than one unique alias in someone's aliases?
       const playerData = playerQuerySnapshot.docs.map((doc) => {
-        return { ...doc.data() as PlayerData, id: doc.id };
+        return { ...(doc.data() as PlayerData), id: doc.id };
       })[0];
 
       const { name: storedName, alias, ftPerc, id } = playerData;

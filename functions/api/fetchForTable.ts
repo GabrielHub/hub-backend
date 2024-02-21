@@ -1,10 +1,10 @@
-import { Request, Response } from 'express';
-import admin from 'firebase-admin';
-import { PlayerData } from '../types';
+import { Request, Response } from "express";
+import admin from "firebase-admin";
+import { PlayerData } from "../types";
 
 interface IRequestBody {
   sortField: string;
-  sortType: 'asc' | 'desc';
+  sortType: "asc" | "desc";
   limit?: number;
 }
 
@@ -27,7 +27,7 @@ const fetchForTable = async (req: IRequest, res: Response): Promise<void> => {
 
   try {
     const querySnapshot = await db
-      .collection('players')
+      .collection("players")
       .orderBy(sortField, sortType)
       .limit(limit ?? 10)
       .get();
@@ -37,7 +37,7 @@ const fetchForTable = async (req: IRequest, res: Response): Promise<void> => {
       rank += 1;
     });
   } catch (error) {
-    throw new Error('Could not query firestore');
+    throw new Error("Could not query firestore");
   }
 
   res.send(playerData);

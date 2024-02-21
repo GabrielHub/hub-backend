@@ -1,4 +1,4 @@
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import { Request, Response } from 'express';
 import findSimilarPlayers from '../utils/findSimilarPlayers';
 import { PlayerData } from '../types';
@@ -16,7 +16,7 @@ const compareToNBA = async (req: Request, res: Response): Promise<void> => {
   }
 
   const db = admin.firestore();
-  const playerData = await db
+  const playerData = (await db
     .collection('players')
     .doc(playerID)
     .get()
@@ -25,7 +25,7 @@ const compareToNBA = async (req: Request, res: Response): Promise<void> => {
         return doc.data();
       }
       throw new Error('Player does not exist');
-    }) as PlayerData;
+    })) as PlayerData;
 
   if (!playerData) {
     throw new Error('Player data does not exist');

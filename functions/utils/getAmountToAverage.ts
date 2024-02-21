@@ -1,4 +1,4 @@
-import { GameData } from '../types';
+import { GameData } from "../types";
 
 /**
  * @description Counts how many times a stat exists in an array of games
