@@ -19,7 +19,7 @@ module.exports = {
     ecmaVersion: 2022,
     tsconfigRootDir: __dirname
   },
-  extends: ['airbnb', 'eslint:recommended', 'plugin:prettier/recommended'],
+  extends: ['eslint:recommended', 'plugin:prettier/recommended'],
   ignorePatterns: [
     '/lib/**/*' // Ignore built files.
   ],
