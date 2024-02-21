@@ -289,7 +289,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
 
   await batch.commit().then((docRef) => {
     // eslint-disable-next-line no-console
-    console.log('Document written with ID: ', docRef);
+    // console.log('Document written with ID: ', docRef);
   });
 
   res.json({ formattedPlayerData, formattedTeamData });

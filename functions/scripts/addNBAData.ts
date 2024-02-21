@@ -20,7 +20,7 @@ const addNBAData = async (): Promise<void> => {
   });
 
   await batch.commit().then((docRef) => {
-    console.log('Document written with ID: ', docRef);
+    // console.log('Document written with ID: ', docRef);
   });
 };
 
