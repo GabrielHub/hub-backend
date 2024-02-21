@@ -1,7 +1,7 @@
 import admin from 'firebase-admin';
 import { Request, Response } from 'express';
 import { findSimilarPlayers } from '../utils';
-import { PlayerData } from '../types';
+import { NBAPlayerData, PlayerData } from '../types';
 
 /**
  * @description Looks up player stats and returns the 3 closest NBA Players from 2023
@@ -31,13 +31,13 @@ const compareToNBA = async (req: Request, res: Response): Promise<void> => {
     throw new Error('Player data does not exist');
   }
 
-  const nbaData: any[] = [];
+  const nbaData: NBAPlayerData[] = [];
   await db
     .collection('nba')
     .get()
     .then((querySnapshot) => {
       querySnapshot.forEach((doc) => {
-        nbaData.push(doc.data());
+        nbaData.push(doc.data() as NBAPlayerData);
       });
     });
 

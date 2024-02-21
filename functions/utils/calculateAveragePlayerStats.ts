@@ -8,6 +8,7 @@ import { round } from 'lodash';
  * @param {*} value
  * @return {boolean}
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const isValidStatline = (stat: string, value: any): boolean => {
   return Boolean(
     typeof value !== 'string' &&
