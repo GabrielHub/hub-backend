@@ -50,6 +50,31 @@ const PLAYERS = [
     name: 'Havoc',
     alias: ['Havoc'],
     ftPerc: 72.8
+  },
+  {
+    name: 'DPhenomenal',
+    alias: ['DPhenomenal', 'DPhenomenal1'],
+    ftPerc: 84.4
+  },
+  {
+    name: 'The Truth',
+    alias: ['The Truth'],
+    ftPerc: 99
+  },
+  {
+    name: 'Crush',
+    alias: ['Crush'],
+    ftPerc: 57.1
+  },
+  {
+    name: 'Guilty',
+    alias: ['Guilty', 'GLXTY', 'GLXTY-24'],
+    ftPerc: 12.5
+  },
+  {
+    name: 'Sky',
+    alias: ['Sky'],
+    ftPerc: 67.6
   }
 ];
 

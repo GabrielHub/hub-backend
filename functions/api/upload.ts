@@ -196,7 +196,9 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
       team: teamKey,
       name,
       pts,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       pos,
+      oppPos,
       treb,
       ast,
       stl,
@@ -209,7 +211,9 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
 
     // * Team data ( might be a waste of space...? )
     const team = formattedTeamData[teamKey];
-    const opponent = rawPlayerData.find((player) => player.pos === pos && player.team !== teamKey);
+    const opponent = rawPlayerData.find(
+      (player) => player.pos === oppPos && player.team !== teamKey
+    );
 
     // * minutes played
     const mp = 20;
