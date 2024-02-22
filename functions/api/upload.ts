@@ -255,11 +255,12 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     );
 
     // * Calculate PER
-    const { aPER, PER: playerPER } = calculateAPER(formattedPlayer, team, league);
+    const { aPER, PER: playerPER, uPER } = calculateAPER(formattedPlayer, team, league);
 
     return {
       ...formattedPlayer,
       aPER,
+      uPER,
       PER: playerPER,
       oFGA,
       oFGM,
@@ -287,6 +288,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     });
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   await batch.commit().then((docRef) => {
     // eslint-disable-next-line no-console
     // console.log('Document written with ID: ', docRef);

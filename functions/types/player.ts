@@ -49,6 +49,7 @@ export interface PlayerData {
   offensiveRanking?: number;
   defensiveRanking?: number;
   PER?: number;
+  uPER?: number;
   mp: number;
   aPERGamesPlayed?: number;
 }

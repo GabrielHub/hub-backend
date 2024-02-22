@@ -80,6 +80,7 @@ export const calculateAveragePlayerStats = (
     offensiveRanking: 0,
     defensiveRanking: 0,
     PER: 0,
+    uPER: 0,
     mp: 0
   };
 
@@ -177,8 +178,10 @@ export const calculateAveragePlayerStats = (
   const weightDRTG = 0.444;
   playerData.defensiveRanking = playerData.drtg * weightDRTG - playerData.oFGA * weightOFGA;
 
-  // * Recalculate PER here
-  playerData.PER = playerData.aPER * (leagueData.PER / (leagueData.aPER ?? playerData.aPER));
+  // * Recalculate PER here and readjust for new pace
+  const paceAdjustment = leagueData.pace / playerData.pace;
+  playerData.aPER = playerData.uPER ? paceAdjustment * playerData.uPER : playerData.aPER;
+  playerData.PER = playerData.aPER * (leagueData.PER / (leagueData.aPER || playerData.aPER));
 
   return playerData;
 };

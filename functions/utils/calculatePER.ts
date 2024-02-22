@@ -23,7 +23,7 @@ export const calculateAPER = (player: PlayerData, team: TeamData, league: League
   const paceAdjustment = league.pace / team.totalPoss;
   let aPER = paceAdjustment * uPER;
 
-  let PER = aPER * (league.PER / (league.aPER ?? aPER));
+  let PER = aPER * (league.PER / (league.aPER || aPER));
 
   // * For some reason aPER can be negative... make it 0 if it is
   // TODO More research into why this is sometimes a negative value
@@ -32,7 +32,7 @@ export const calculateAPER = (player: PlayerData, team: TeamData, league: League
     PER = 15;
   }
 
-  return { aPER, PER };
+  return { aPER, PER, uPER };
 };
 
 export default {};
