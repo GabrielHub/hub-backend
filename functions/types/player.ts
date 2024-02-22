@@ -52,4 +52,5 @@ export interface PlayerData {
   uPER?: number;
   mp: number;
   aPERGamesPlayed?: number;
+  plusMinus: number;
 }

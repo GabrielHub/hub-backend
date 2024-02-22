@@ -8,13 +8,13 @@ const PLAYERS = [
   },
   {
     name: 'Bam',
-    alias: ['Bam', 'BamBamKam', 'VUBHI 24'],
+    alias: ['Bam', 'BamBamKam31', 'VUBHI 24'],
     ftPerc: 85.8
   },
   {
     name: 'Rob',
     alias: ['Rob', 'Robbed you again', 'RobTheBuilder'],
-    ftPerc: 51.4
+    ftPerc: 75.7
   },
   {
     name: 'Maestro',
@@ -75,6 +75,16 @@ const PLAYERS = [
     name: 'Sky',
     alias: ['Sky'],
     ftPerc: 67.6
+  },
+  {
+    name: 'GoogleMe',
+    alias: ['GoogleMe', 'CoogleMe', 'it be like that sometimes'],
+    ftPerc: 85.7
+  },
+  {
+    name: 'young hampton',
+    alias: ['young hampton', 'mr. shoot or get shot'],
+    ftPerc: 75
   }
 ];
 

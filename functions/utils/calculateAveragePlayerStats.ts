@@ -81,7 +81,8 @@ export const calculateAveragePlayerStats = (
     defensiveRanking: 0,
     PER: 0,
     uPER: 0,
-    mp: 0
+    mp: 0,
+    plusMinus: 0
   };
 
   // * DRtg can be NaN if the opponent took 0 fg, so skip over games where this is the case and do different division
@@ -112,7 +113,7 @@ export const calculateAveragePlayerStats = (
   });
 
   // * Properties to total and not average
-  const propertiesToTotal = ['dd', 'td', 'qd'];
+  const propertiesToTotal = ['dd', 'td', 'qd', 'plusMinus'];
 
   // * Average values by number of games and round them
   Object.keys(playerData).forEach((stat) => {

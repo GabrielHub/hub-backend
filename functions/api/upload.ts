@@ -196,8 +196,6 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
       team: teamKey,
       name,
       pts,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      pos,
       oppPos,
       treb,
       ast,
@@ -211,6 +209,16 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
 
     // * Team data ( might be a waste of space...? )
     const team = formattedTeamData[teamKey];
+
+    // * Plus Minus needs the opposing team data
+    let plusMinus = 0;
+    const opposingTeamKey = Object.keys(formattedTeamData).find(
+      (teamDataKey) => teamDataKey !== teamKey
+    );
+    if (opposingTeamKey) {
+      plusMinus = team.pts - formattedTeamData[opposingTeamKey].pts;
+    }
+
     const opponent = rawPlayerData.find(
       (player) => player.pos === oppPos && player.team !== teamKey
     );
@@ -277,7 +285,8 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
       usageRate,
       gameScore,
       drtg,
-      drebPerc
+      drebPerc,
+      plusMinus
     };
   });
 
