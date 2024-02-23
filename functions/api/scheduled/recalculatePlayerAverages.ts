@@ -1,6 +1,5 @@
 import admin from 'firebase-admin';
 import functions from 'firebase-functions';
-import { MIN_GAMES } from '../../constants';
 import { calculateAveragePlayerStats } from '../../utils';
 import { GameData, LeagueData } from '../../types';
 

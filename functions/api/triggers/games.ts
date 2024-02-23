@@ -2,7 +2,7 @@ import admin from 'firebase-admin';
 import functions from 'firebase-functions';
 import { calculateAveragePlayerStats } from '../../utils';
 import { GameData, LeagueData, PlayerData } from '../../types';
-import { DEFAULT_FT_PERC, MIN_GAMES } from '../../constants';
+import { DEFAULT_FT_PERC } from '../../constants';
 
 const GAME_TRIGGER_STATUS_ENUMS = {
   IN_PROGRESS: 'in-progress',
