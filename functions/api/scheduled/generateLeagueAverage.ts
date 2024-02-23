@@ -81,9 +81,9 @@ const generateLeagueAverage = async (): Promise<null> => {
       // * For now hardcode this missing stat (pace)
       if (MISSING_DATA.includes(stat)) {
         const paceLength = getMissingStatAmount(playerList, stat);
-        averageGameStats[stat] = round(averageGameStats[stat] / paceLength);
+        averageGameStats[stat] = round(averageGameStats[stat] / paceLength, 1);
       } else {
-        averageGameStats[stat] = round(averageGameStats[stat] / playerList.length);
+        averageGameStats[stat] = round(averageGameStats[stat] / playerList.length, 1);
       }
     });
 

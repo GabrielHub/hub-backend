@@ -22,6 +22,7 @@ import { upsertPlayerData } from '../api/triggers/games';
 // * Cron jobs
 import deleteDuplicateGames from '../api/scheduled/deleteDuplicateGames';
 import generateLeagueAverage from '../api/scheduled/generateLeagueAverage';
+import { recalculatePlayerAverages } from '../api/scheduled/recalculatePlayerAverages';
 
 admin.initializeApp();
 
@@ -51,3 +52,7 @@ exports.deleteDuplicateGames = pubsub
   .schedule('0 23 * * *')
   .timeZone('America/New_York')
   .onRun(deleteDuplicateGames);
+exports.recalculatePlayerAverages = pubsub
+  .schedule('0 23 * * *')
+  .timeZone('America/New_York')
+  .onRun(recalculatePlayerAverages);

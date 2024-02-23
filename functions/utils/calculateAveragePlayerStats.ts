@@ -117,7 +117,6 @@ export const calculateAveragePlayerStats = (
   // * Average values by number of games and round them
   Object.keys(playerData).forEach((stat) => {
     if (!propertiesToSkip.includes(stat) && !propertiesToTotal.includes(stat)) {
-      // TODO figure out how to save precision
       // ? Rounding here saves a loop but also makes the Perc calculations below less precise...
 
       // * Check if stat is normal (never had a NaN value)
@@ -130,7 +129,7 @@ export const calculateAveragePlayerStats = (
         // * Stats may not exist if they were added after data was being generated (PER, pace, pProd)
         divideFactor = getAmountToAverage(gameData, stat);
       }
-      playerData[stat] = round(playerData[stat] / divideFactor);
+      playerData[stat] = round(playerData[stat] / divideFactor, 1);
 
       // * do not store bad information
       if (Number.isNaN(playerData[stat])) {
@@ -139,24 +138,26 @@ export const calculateAveragePlayerStats = (
     }
   });
 
+  console.log('playerData', playerData);
+
   playerData.gp = gameData.length;
   // * Add Percentage values ie. EFG% TS% OFG% etc.
-  playerData.fgPerc = round(100 * (playerData.fgm / playerData.fga)) || null;
-  playerData.twoPerc = round(100 * (playerData.twopm / playerData.twopa)) || null;
-  playerData.threePerc = round(100 * (playerData.threepm / playerData.threepa)) || null;
+  playerData.fgPerc = round(100 * (playerData.fgm / playerData.fga), 1) || null;
+  playerData.twoPerc = round(100 * (playerData.twopm / playerData.twopa), 1) || null;
+  playerData.threePerc = round(100 * (playerData.threepm / playerData.threepa), 1) || null;
   playerData.tsPerc =
-    round(100 * (playerData.pts / (2 * (playerData.fga + 0.44 * playerData.fta)))) || null;
+    round(100 * (playerData.pts / (2 * (playerData.fga + 0.44 * playerData.fta))), 1) || null;
   playerData.efgPerc =
-    round(100 * ((playerData.fgm + 0.5 ** playerData.threepm) / playerData.fga)) || null;
-  playerData.threepAR = round(100 * (playerData.threepa / playerData.fga));
+    round(100 * ((playerData.fgm + 0.5 ** playerData.threepm) / playerData.fga), 1) || null;
+  playerData.threepAR = round(100 * (playerData.threepa / playerData.fga), 1);
 
-  playerData.astToRatio = round(playerData.ast / playerData.tov);
+  playerData.astToRatio = round(playerData.ast / playerData.tov, 1);
 
   // * Defensive stats (opponent efficiency)
-  playerData.oFGPerc = round(100 * (playerData.oFGM / playerData.oFGA)) || null;
-  playerData.o3PPerc = round(100 * (playerData.o3PM / playerData.o3PA)) || null;
+  playerData.oFGPerc = round(100 * (playerData.oFGM / playerData.oFGA), 1) || null;
+  playerData.o3PPerc = round(100 * (playerData.o3PM / playerData.o3PA), 1) || null;
   playerData.oEFGPerc =
-    round(100 * ((playerData.oFGM + 0.5 ** playerData.o3PM) / playerData.oFGA)) || null;
+    round(100 * ((playerData.oFGM + 0.5 ** playerData.o3PM) / playerData.oFGA), 1) || null;
 
   // * Calculate offensive and defensive rankings using weights between ortg/drtg and usage/oFGA
 
