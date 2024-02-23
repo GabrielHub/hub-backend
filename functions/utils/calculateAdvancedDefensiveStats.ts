@@ -1,13 +1,13 @@
 import { calculateTwoPointers } from './calculateTwoPointers';
 import { calculateFreeThrowsMade } from './calculateFreeThrows';
-import { PlayerData, TeamData } from '../types';
+import { PlayerData, RawPlayerData, TeamData } from '../types';
 
 // TODO We need to use this until we have more data (league average data)
 const DEFAULT_FT_PERC = 0.72;
 
 export const calculateAdvancedDefensiveStats = (
   player: PlayerData,
-  opponent: PlayerData,
+  opponent: RawPlayerData,
   opOREB: number,
   team: TeamData
 ) => {

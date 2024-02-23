@@ -11,7 +11,7 @@ import {
   getExpectedORebounds
 } from '../utils';
 import { DEFAULT_FT_PERC, UPLOAD_KEY } from '../constants';
-import { LeagueData, PlayerData } from '../types';
+import { LeagueData, RawPlayerData, RawTeamData, TotalRawTeamData } from '../types';
 
 // ? Used to estimate OREB
 const FG_OREB_PERC = 0.22;
@@ -23,10 +23,17 @@ interface PlayerFTData {
 }
 
 const uploadStats = async (req: any, res: any): Promise<void> => {
-  const { rawTeamData, rawPlayerData, key } = req.body;
+  const { rawTeamData: uploadRawTeamData, rawPlayerData: uploadRawPlayerData, key } = req.body;
+
+  const rawTeamData: TotalRawTeamData = uploadRawTeamData;
+  const rawPlayerData: RawPlayerData[] = uploadRawPlayerData;
 
   if (!key || typeof key !== 'string' || key !== UPLOAD_KEY) {
-    throw Error('Invalid request parameters');
+    res.status(401).send('Invalid key');
+  }
+
+  if (!rawTeamData || !rawPlayerData) {
+    res.status(401).send('Invalid data');
   }
 
   const formattedTeamData = {};
@@ -89,14 +96,14 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
   // * Calculate oreb for both teams first (estimations) then set basic stats
   Object.keys(rawTeamData).forEach((teamKey) => {
     const teamData = rawTeamData[teamKey];
-    const { reb, fgm, fga, threepm, threepa } = teamData;
+    const { treb, fgm, fga, threepm, threepa } = teamData;
     const missed3P = threepa - threepm;
     const missed2P = fga - fgm - missed3P;
 
     // * Estimate OREB
     const expected = Math.floor(missed3P * THREEP_OREB_PERC + missed2P * FG_OREB_PERC);
-    const oreb = getExpectedORebounds(reb, expected);
-    const dreb = Math.abs(reb - oreb);
+    const oreb = getExpectedORebounds(treb, expected);
+    const dreb = Math.abs(treb - oreb);
 
     teamReboundData[teamKey] = {
       dreb,
@@ -104,14 +111,19 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     };
   });
 
-  Object.keys(rawTeamData).forEach((teamKey) => {
+  Object.keys(rawTeamData).forEach((stringTeamKey) => {
+    const teamKey = parseInt(stringTeamKey, 10);
     const mp = 100; // * Each games is 20 minutes so total minutes is always 100
 
     // * Load image recognized stats first
     // * Destructure stats that we'll use for calculations and readability
     const { [teamKey]: teamData, ...rest } = rawTeamData;
-    const opponent: any = Object.values(rest)[0];
-    const { pts, reb, tov, fgm, fga, threepm, threepa } = teamData;
+    const opponent: RawTeamData = Object.values(rest)[0];
+    if (!opponent) {
+      res.status(400).send('No opponent found. Invalid request');
+    }
+
+    const { pts, treb, tov, fgm, fga, threepm, threepa } = teamData;
 
     const { twopa, twopm } = calculateTwoPointers(fga, fgm, threepa, threepm);
     // * We cannot get the FTA without knowing FT%, so just calculate FTM
@@ -121,7 +133,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     const opFTA = teamFreeThrowData?.[opponent.team] || 1;
 
     const { dreb, oreb } = teamReboundData[teamKey];
-    const ORBPerc = oreb / (oreb + (opponent.reb + teamReboundData[opponent.team].oreb));
+    const ORBPerc = oreb / (oreb + teamReboundData[opponent.team].dreb);
 
     // * Possessions
     const scoringPoss = fgm + (1 - (1 - (ftm / fta) ** 2)) * fta * 0.4;
@@ -129,11 +141,11 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
       0.5 *
       (fga +
         0.4 * fta -
-        1.07 * (oreb / (oreb + opponent.reb)) * (fga - fgm) +
+        1.07 * ORBPerc * (fga - fgm) +
         tov +
         (opponent.fga +
           0.4 * opFTA -
-          1.07 * (0 / (0 + reb)) * (opponent.fga - opponent.fgm) +
+          1.07 * (0 / (0 + treb)) * (opponent.fga - opponent.fgm) +
           opponent.tov));
 
     // * ORTG Necessary calculations
@@ -189,7 +201,8 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
   });
 
   const formattedPlayerData = rawPlayerData.map((playerData) => {
-    let formattedPlayer: PlayerData;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let formattedPlayer: any;
     // * Load image recognized stats first
     // * Destructure stats that we'll use for calculations and readability
     const {
@@ -213,7 +226,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     // * Plus Minus needs the opposing team data
     let plusMinus = 0;
     const opposingTeamKey = Object.keys(formattedTeamData).find(
-      (teamDataKey) => teamDataKey !== teamKey
+      (teamDataKey) => parseInt(teamDataKey, 10) !== teamKey
     );
     if (opposingTeamKey) {
       plusMinus = team.pts - formattedTeamData[opposingTeamKey].pts;
@@ -257,7 +270,13 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     const { ortg, floorPerc, astPerc, tovPerc, usageRate, gameScore } =
       calculateAdvancedOffensiveStats(formattedPlayer, team);
 
-    const opOREB = playerReboundData[opponent.name]?.oreb || 0;
+    const opOREB = opponent?.name ? playerReboundData[opponent.name]?.oreb || 0 : 0;
+
+    if (!opponent) {
+      console.error('No opponent found for player', formattedPlayer.name);
+      return;
+    }
+
     // * Calculate advanced defensive stats
     const { drtg, drebPerc, oFGA, oFGM, o3PA, o3PM } = calculateAdvancedDefensiveStats(
       formattedPlayer,
