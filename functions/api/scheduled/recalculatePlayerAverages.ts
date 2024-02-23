@@ -11,9 +11,7 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
     const querySnapshot = await db.collection('players').get();
     querySnapshot.docs.forEach((doc) => {
       const playerData = doc.data();
-      if (playerData?.gp) {
-        playerList.push({ ...playerData, id: doc.id });
-      }
+      playerList.push({ ...playerData, id: doc.id });
     });
 
     // * Get league data to recalculate PER based on league averages
@@ -38,32 +36,34 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
       // TODO Error notifications/logs if there are more than one unique alias in someone's aliases?
 
       const gameDataRef = await db.collection('games').where('name', 'in', alias).get();
-      const gameData = gameDataRef.docs.map((doc) => doc.data() as GameData);
-      const avgPlayerStats = calculateAveragePlayerStats(
-        leagueData,
-        gameData,
-        storedName,
-        alias,
-        ftPerc
-      );
+      if (gameDataRef.size) {
+        const gameData = gameDataRef.docs.map((doc) => doc.data() as GameData);
+        const avgPlayerStats = calculateAveragePlayerStats(
+          leagueData,
+          gameData,
+          storedName,
+          alias,
+          ftPerc
+        );
 
-      // * Add number of aPER games played
-      let aPERGames = 0;
-      gameData.forEach(({ aPER }) => {
-        if (aPER) {
-          aPERGames += 1;
-        }
-      });
-
-      avgPlayerStats.aPERGamesPlayed = aPERGames;
-
-      await db
-        .collection('players')
-        .doc(id)
-        .set({
-          ...avgPlayerStats,
-          _updatedAt: admin.firestore.Timestamp.now()
+        // * Add number of aPER games played
+        let aPERGames = 0;
+        gameData.forEach(({ aPER }) => {
+          if (aPER) {
+            aPERGames += 1;
+          }
         });
+
+        avgPlayerStats.aPERGamesPlayed = aPERGames;
+
+        await db
+          .collection('players')
+          .doc(id)
+          .set({
+            ...avgPlayerStats,
+            _updatedAt: admin.firestore.Timestamp.now()
+          });
+      }
     }
   } catch (error) {
     functions.logger.error('Error running recalculatePlayerAverages', error);
