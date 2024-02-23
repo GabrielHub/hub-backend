@@ -1,7 +1,17 @@
 import admin from 'firebase-admin';
+import functions from 'firebase-functions';
+import nba from 'nba-api-client';
+import dayjs from 'dayjs';
 import { Request, Response } from 'express';
 import { findSimilarPlayers } from '../utils';
-import { NBAPlayerData, PlayerData } from '../types';
+import { TotalNBAData, PlayerData, SimilarPlayer } from '../types';
+import { PER_GAME, expectedPerGameFormats } from '../constants';
+
+const basicErrorHandler = (res: Response, message: string): void => {
+  functions?.logger.error(message);
+  res.status(400).send(message);
+  throw new Error(message);
+};
 
 /**
  * @description Looks up player stats and returns the 3 closest NBA Players from 2023
@@ -9,10 +19,30 @@ import { NBAPlayerData, PlayerData } from '../types';
  * @param {Response} res
  */
 const compareToNBA = async (req: Request, res: Response): Promise<void> => {
-  const { playerID } = req.query;
+  const { playerID, season, perGame: perGameReq, paceAdjust } = req.query;
 
   if (!playerID || typeof playerID !== 'string') {
-    throw new Error('Invalid player passed');
+    basicErrorHandler(res, 'Invalid playerID passed');
+    return;
+  }
+
+  if (!season || typeof season !== 'string') {
+    basicErrorHandler(res, 'Invalid season passed');
+  } else {
+    if (!dayjs(season, 'YYYY-YY').isValid()) {
+      basicErrorHandler(res, 'Invalid season format');
+    }
+
+    const [startYear, endYear] = season.split('-');
+    if (parseInt(endYear) > dayjs().year()) {
+      basicErrorHandler(res, `Invalid season year ${startYear}-${endYear}`);
+    }
+  }
+
+  let perGame = PER_GAME;
+  // check if perGame is matches one of the expected formats. If not default to PER_GAME
+  if (perGameReq && typeof perGameReq === 'string' && expectedPerGameFormats.includes(perGameReq)) {
+    perGame = perGameReq;
   }
 
   const db = admin.firestore();
@@ -24,26 +54,27 @@ const compareToNBA = async (req: Request, res: Response): Promise<void> => {
       if (doc.exists) {
         return doc.data();
       }
-      throw new Error('Player does not exist');
+      basicErrorHandler(res, 'Player not found');
+      return;
     })) as PlayerData;
 
-  if (!playerData) {
-    throw new Error('Player data does not exist');
+  let similarPlayers: SimilarPlayer[] = [];
+
+  try {
+    const response = await nba.leaguePlayerGeneralStats({
+      Season: season,
+      PerMode: perGame,
+      PaceAdjust: paceAdjust ? 'Y' : 'N'
+    });
+    const nbaData: TotalNBAData = response.LeagueDashPlayerStats;
+
+    similarPlayers = findSimilarPlayers(playerData, nbaData, perGame);
+  } catch (error) {
+    functions?.logger.error('Error fetching NBA data', error);
+    res.status(500).send('Error fetching NBA data');
   }
 
-  const nbaData: NBAPlayerData[] = [];
-  await db
-    .collection('nba')
-    .get()
-    .then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        nbaData.push(doc.data() as NBAPlayerData);
-      });
-    });
-
-  const similarPlayers = findSimilarPlayers(playerData, nbaData);
-
-  res.send(similarPlayers);
+  res.status(200).send(similarPlayers);
 };
 
 export default compareToNBA;
