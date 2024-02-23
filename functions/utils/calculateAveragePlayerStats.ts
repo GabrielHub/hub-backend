@@ -138,8 +138,6 @@ export const calculateAveragePlayerStats = (
     }
   });
 
-  console.log('playerData', playerData);
-
   playerData.gp = gameData.length;
   // * Add Percentage values ie. EFG% TS% OFG% etc.
   playerData.fgPerc = round(100 * (playerData.fgm / playerData.fga), 1) || null;
