@@ -33,40 +33,38 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
 
     for (const playerData of playerList) {
       const { name: storedName, alias, ftPerc, id } = playerData;
+
       // * collect all games by ALIAS includes NAME and use that for the calculate function
       // * There could theoretically be bad data, and an alias could be in multiple players. Avoid this by taking the first
       // TODO Error notifications/logs if there are more than one unique alias in someone's aliases?
 
-      // * Only calculate averages once a player has min games played
       const gameDataRef = await db.collection('games').where('name', 'in', alias).get();
-      if (gameDataRef.size >= MIN_GAMES) {
-        const gameData = gameDataRef.docs.map((doc) => doc.data() as GameData);
-        const avgPlayerStats = calculateAveragePlayerStats(
-          leagueData,
-          gameData,
-          storedName,
-          alias,
-          ftPerc
-        );
+      const gameData = gameDataRef.docs.map((doc) => doc.data() as GameData);
+      const avgPlayerStats = calculateAveragePlayerStats(
+        leagueData,
+        gameData,
+        storedName,
+        alias,
+        ftPerc
+      );
 
-        // * Add number of aPER games played
-        let aPERGames = 0;
-        gameData.forEach(({ aPER }) => {
-          if (aPER) {
-            aPERGames += 1;
-          }
+      // * Add number of aPER games played
+      let aPERGames = 0;
+      gameData.forEach(({ aPER }) => {
+        if (aPER) {
+          aPERGames += 1;
+        }
+      });
+
+      avgPlayerStats.aPERGamesPlayed = aPERGames;
+
+      await db
+        .collection('players')
+        .doc(id)
+        .set({
+          ...avgPlayerStats,
+          _updatedAt: admin.firestore.Timestamp.now()
         });
-
-        avgPlayerStats.aPERGamesPlayed = aPERGames;
-
-        await db
-          .collection('players')
-          .doc(id)
-          .set({
-            ...avgPlayerStats,
-            _updatedAt: admin.firestore.Timestamp.now()
-          });
-      }
     }
   } catch (error) {
     functions.logger.error('Error running recalculatePlayerAverages', error);
