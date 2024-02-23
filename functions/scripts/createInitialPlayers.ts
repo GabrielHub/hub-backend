@@ -7,7 +7,7 @@ const PLAYERS = [
     ftPerc: 55.6
   },
   {
-    name: 'Bam',
+    name: 'BamBamKam31',
     alias: ['Bam', 'BamBamKam31', 'VUBHI 24'],
     ftPerc: 85.8
   },
@@ -23,11 +23,11 @@ const PLAYERS = [
   },
   {
     name: 'Kikkiaro',
-    alias: ['Kikkiaro'],
+    alias: ['Kikkiaro', 'Kikki'],
     ftPerc: 82.5
   },
   {
-    name: 'Edu',
+    name: 'Eduard',
     alias: ['Edu', 'Eduard', 'Edu@RD'],
     ftPerc: 69.5
   },
@@ -63,7 +63,7 @@ const PLAYERS = [
   },
   {
     name: 'Crush',
-    alias: ['Crush'],
+    alias: ['Crush', 'crush'],
     ftPerc: 57.1
   },
   {
@@ -78,13 +78,23 @@ const PLAYERS = [
   },
   {
     name: 'GoogleMe',
-    alias: ['GoogleMe', 'CoogleMe', 'it be like that sometimes'],
+    alias: ['GoogleMe', 'CoogleMe', 'it be like that sometimes', 'Google'],
     ftPerc: 85.7
   },
   {
     name: 'young hampton',
-    alias: ['young hampton', 'mr. shoot or get shot'],
+    alias: ['young hampton', 'mr. shoot or get shot', 'hampton'],
     ftPerc: 75
+  },
+  {
+    name: 'sim',
+    alias: ['sim'],
+    ftPerc: 57.6
+  },
+  {
+    name: 'SHYDAGGER',
+    alias: ['SHYDAGGER', 'Shy'],
+    ftPerc: 63
   }
 ];
 
