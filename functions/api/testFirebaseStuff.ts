@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { createInitialPlayers } from '../scripts/createInitialPlayers';
+import generateLeagueAverage from './scheduled/generateLeagueAverage';
 
 // * Just using this to test some stuff I don't want to set up the firestore emulator for
 const testFirebaseStuff = async (req: Request, res: Response): Promise<void> => {
-  await createInitialPlayers();
+  await generateLeagueAverage();
   res.status(200);
 };
 

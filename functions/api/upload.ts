@@ -309,6 +309,8 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     };
   });
 
+  console.log('formattedPlayerData', formattedPlayerData);
+
   // * Batch writes
   const batch = admin.firestore().batch();
   formattedPlayerData.forEach((player) => {

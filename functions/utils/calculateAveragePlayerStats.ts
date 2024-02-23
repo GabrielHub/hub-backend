@@ -66,7 +66,6 @@ export const calculateAveragePlayerStats = (
     oFGA: 0,
     oFGM: 0,
     aPER: 0,
-    gp: 0,
     fgPerc: 0,
     twoPerc: 0,
     threePerc: 0,

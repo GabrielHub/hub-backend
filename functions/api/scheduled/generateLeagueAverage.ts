@@ -62,7 +62,6 @@ const generateLeagueAverage = async (): Promise<null> => {
 
     // * Initialize averages with 0 for each stat
     const averageGameStats = {
-      /** Set league average PER to 15 as per Hollinger https://www.basketball-reference.com/about/per.html  */
       PER: 15,
       aPER: 0
     };
@@ -99,6 +98,8 @@ const generateLeagueAverage = async (): Promise<null> => {
     });
     const aPER = sumOfAPER / gamesWithAPER;
     averageGameStats.aPER = aPER;
+    /** Set league average PER to 15 as per Hollinger https://www.basketball-reference.com/about/per.html  */
+    averageGameStats.PER = 15;
 
     await db.collection('league').add({
       ...averageGameStats,
