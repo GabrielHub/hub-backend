@@ -28,7 +28,8 @@ const normalizeStats = (stat: number, mp: number, pace: number, perGame: string)
 export const findSimilarPlayers = (
   player: PlayerData,
   nbaPlayers: TotalNBAData,
-  perGame: string
+  perGame: string,
+  maxPlayers: number
 ): SimilarPlayer[] => {
   const playerMin = 20;
   const playerPace = player.pace;
@@ -98,8 +99,10 @@ export const findSimilarPlayers = (
   // * Sort the distances in ascending order
   distances.sort((a, b) => a.distance - b.distance);
 
+  const limit = maxPlayers > 12 ? 12 : maxPlayers;
+
   // * Return the top 3 most similar players
-  return distances.slice(0, 3).map((d) => {
+  return distances.slice(0, limit).map((d) => {
     const similarity = 100 - d.distance;
     return { ...d.player, similarity };
   });

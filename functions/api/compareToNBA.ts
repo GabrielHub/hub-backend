@@ -19,7 +19,7 @@ const basicErrorHandler = (res: Response, message: string): void => {
  * @param {Response} res
  */
 const compareToNBA = async (req: Request, res: Response): Promise<void> => {
-  const { playerID, season, perGame: perGameReq, paceAdjust } = req.query;
+  const { playerID, season, perGame: perGameReq, paceAdjust, limit } = req.query;
 
   if (!playerID || typeof playerID !== 'string') {
     basicErrorHandler(res, 'Invalid playerID passed');
@@ -68,7 +68,9 @@ const compareToNBA = async (req: Request, res: Response): Promise<void> => {
     });
     const nbaData: TotalNBAData = response.LeagueDashPlayerStats;
 
-    similarPlayers = findSimilarPlayers(playerData, nbaData, perGame);
+    const maxPlayers = limit ? parseInt(limit as string, 10) : 3;
+
+    similarPlayers = findSimilarPlayers(playerData, nbaData, perGame, maxPlayers);
   } catch (error) {
     functions?.logger.error('Error fetching NBA data', error);
     res.status(500).send('Error fetching NBA data');
