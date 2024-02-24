@@ -1,5 +1,5 @@
 import poisson from '@stdlib/random/base/poisson';
-import { warn } from 'firebase-functions/lib/logger';
+import { warn } from 'firebase-functions/logger';
 
 // TODO This sometimes generates a fta that is like 200, make sure this doesn't happen...
 
