@@ -1,5 +1,5 @@
 import admin from 'firebase-admin';
-import functions from 'firebase-functions';
+import { error, log } from 'firebase-functions/logger';
 import { calculateAveragePlayerStats } from '../../utils';
 import { GameData, LeagueData } from '../../types';
 
@@ -7,6 +7,9 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
   const db = admin.firestore();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const playerList: any[] = [];
+
+  log('running recalculatePlayerAverages');
+
   try {
     const querySnapshot = await db.collection('players').get();
     querySnapshot.docs.forEach((doc) => {
@@ -56,6 +59,7 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
 
         avgPlayerStats.aPERGamesPlayed = aPERGames;
 
+        log('updating player', storedName, 'aliases', alias);
         await db
           .collection('players')
           .doc(id)
@@ -65,8 +69,8 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
           });
       }
     }
-  } catch (error) {
-    functions.logger.error('Error running recalculatePlayerAverages', error);
+  } catch (err) {
+    error('Error running recalculatePlayerAverages', err);
   }
 };
 

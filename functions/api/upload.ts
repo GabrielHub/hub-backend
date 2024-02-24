@@ -1,4 +1,5 @@
 import admin from 'firebase-admin';
+import { log, warn } from 'firebase-functions/logger';
 import _ from 'lodash';
 import {
   calculateAPER,
@@ -29,10 +30,12 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
   const rawPlayerData: RawPlayerData[] = uploadRawPlayerData;
 
   if (!key || typeof key !== 'string' || key !== UPLOAD_KEY) {
+    warn('Upload: Invalid key');
     res.status(401).send('Invalid key');
   }
 
   if (!rawTeamData || !rawPlayerData) {
+    warn('Upload: Invalid data');
     res.status(401).send('Invalid data');
   }
 
@@ -40,6 +43,8 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
   const teamReboundData = {};
   const playerReboundData = {};
   const playerFreeThrowData = {};
+
+  log('uploadStats', rawTeamData, rawPlayerData);
 
   const db = admin.firestore();
   // * Fetch league data for PER
@@ -120,6 +125,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     const { [teamKey]: teamData, ...rest } = rawTeamData;
     const opponent: RawTeamData = Object.values(rest)[0];
     if (!opponent) {
+      warn('No opponent found. Invalid request');
       res.status(400).send('No opponent found. Invalid request');
     }
 
@@ -325,6 +331,8 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     // eslint-disable-next-line no-console
     // console.log('Document written with ID: ', docRef);
   });
+
+  log('uploadStats', { formattedPlayerData, formattedTeamData });
 
   res.json({ formattedPlayerData, formattedTeamData });
 };

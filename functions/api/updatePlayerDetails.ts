@@ -1,4 +1,5 @@
 import admin from 'firebase-admin';
+import { log } from 'firebase-functions/logger';
 import { Request, Response } from 'express';
 
 interface IRequestBody {
@@ -31,6 +32,7 @@ const updatePlayerDetails = async (req: IRequest, res: Response): Promise<void> 
   }
 
   const db = admin.firestore();
+  log('updatePlayerDetails', playerID, ftPerc, alias, aliasesToAdd);
 
   if (aliasesToAdd.length) {
     // * Trim inputs for whitespace and validate types

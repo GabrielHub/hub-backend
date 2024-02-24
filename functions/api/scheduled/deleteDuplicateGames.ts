@@ -1,4 +1,5 @@
 import admin from 'firebase-admin';
+import { log, error } from 'firebase-functions/logger';
 import { GameData } from '../../types';
 
 // * Fields to use in comparisons (checking if a game is a duplicate)
@@ -56,6 +57,7 @@ const findDuplicateGames = (games: GameData[], fields: string[]): string[] => {
 
 const deleteDuplicateGames = async (): Promise<null> => {
   const db = admin.firestore();
+  log('running deleteDuplicateGames');
   try {
     const querySnapshot = await db.collection('games').get();
 
@@ -66,14 +68,15 @@ const deleteDuplicateGames = async (): Promise<null> => {
 
     const gamesToDelete = findDuplicateGames(gameList, similarityFieldsToCheck);
 
+    log('deleting', gamesToDelete.length, 'duplicate games');
+
     const promises = gamesToDelete.map((id) => db.collection('games').doc(id).delete());
 
     await Promise.all(promises);
 
     return null;
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.log(error);
+  } catch (err) {
+    error('Error running deleteDuplicateGames', err);
     return null;
   }
 };

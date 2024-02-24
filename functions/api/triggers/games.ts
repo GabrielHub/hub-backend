@@ -1,5 +1,5 @@
 import admin from 'firebase-admin';
-import functions from 'firebase-functions';
+import { log, error } from 'firebase-functions/logger';
 import { calculateAveragePlayerStats } from '../../utils';
 import { GameData, LeagueData, PlayerData } from '../../types';
 import { DEFAULT_FT_PERC } from '../../constants';
@@ -11,10 +11,11 @@ const GAME_TRIGGER_STATUS_ENUMS = {
 };
 
 // * Update players when games are added
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const upsertPlayerData = async (snapshot: any) => {
   const data = snapshot.after.data();
   const { name, gameTrigger } = data;
-  functions.logger.info('upsertPlayerData', name, gameTrigger);
+  log('upsertPlayerData', name, gameTrigger);
   const gameRef = snapshot.after.ref;
 
   const db = admin.firestore();
@@ -24,10 +25,7 @@ export const upsertPlayerData = async (snapshot: any) => {
       gameTrigger?.status === GAME_TRIGGER_STATUS_ENUMS.SUCCESS ||
       gameTrigger?.status === GAME_TRIGGER_STATUS_ENUMS.FAIL
     ) {
-      functions.logger.info(
-        'Skipping sendMail trigger.',
-        `status is ${gameTrigger?.status ?? 'undefined'}`
-      );
+      log('Skipping sendMail trigger.', `status is ${gameTrigger?.status ?? 'undefined'}`);
       return;
     }
 
@@ -115,8 +113,8 @@ export const upsertPlayerData = async (snapshot: any) => {
         date: admin.firestore.Timestamp.now()
       }
     });
-  } catch (error) {
-    functions.logger.error('Error in game trigger', error);
+  } catch (err) {
+    error('Error in game trigger', err);
     gameRef.update({
       gameTrigger: {
         status: GAME_TRIGGER_STATUS_ENUMS.FAIL,

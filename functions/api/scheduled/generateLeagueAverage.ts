@@ -1,4 +1,5 @@
 import admin from 'firebase-admin';
+import { log, error } from 'firebase-functions/logger';
 import dayjs from 'dayjs';
 import { PlayerData } from '../../types';
 import { round } from 'lodash';
@@ -45,6 +46,7 @@ const getMissingStatAmount = (playerList: PlayerData[], stat: string): number =>
 const generateLeagueAverage = async (): Promise<null> => {
   const db = admin.firestore();
 
+  log('running generateLeagueAverage');
   // * Missing Data, data that may not be there for all players
   const MISSING_DATA = ['pace', 'aPER'];
 
@@ -108,10 +110,11 @@ const generateLeagueAverage = async (): Promise<null> => {
       createdAt: dayjs().format('YYYY-MM-DD')
     });
 
+    log('league average updated', averageGameStats);
+
     return null;
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.log(error);
+  } catch (err) {
+    error('Error running generateLeagueAverage', err);
     return null;
   }
 };

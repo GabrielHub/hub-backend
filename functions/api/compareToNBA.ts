@@ -1,5 +1,5 @@
 import admin from 'firebase-admin';
-import functions from 'firebase-functions';
+import { error } from 'firebase-functions/logger';
 import nba from 'nba-api-client';
 import dayjs from 'dayjs';
 import { Request, Response } from 'express';
@@ -8,7 +8,7 @@ import { TotalNBAData, PlayerData, SimilarPlayer } from '../types';
 import { PER_GAME, expectedPerGameFormats } from '../constants';
 
 const basicErrorHandler = (res: Response, message: string): void => {
-  functions?.logger.error(message);
+  error(message);
   res.status(400).send(message);
   throw new Error(message);
 };
@@ -71,8 +71,8 @@ const compareToNBA = async (req: Request, res: Response): Promise<void> => {
     const maxPlayers = limit ? parseInt(limit as string, 10) : 3;
 
     similarPlayers = findSimilarPlayers(playerData, nbaData, perGame, maxPlayers);
-  } catch (error) {
-    functions?.logger.error('Error fetching NBA data', error);
+  } catch (err) {
+    error('Error fetching NBA data', err);
     res.status(500).send('Error fetching NBA data');
   }
 
