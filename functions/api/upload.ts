@@ -85,7 +85,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     // * We cannot get the FTA without knowing FT%, so find it if the player exists and has a default FT Perc
     const { ftPerc = DEFAULT_FT_PERC } = playerFT.find(({ alias }) => alias.includes(name)) || {};
     log('estimating fta for ', { ftPerc, ftm, name });
-    const fta = ftm === 0 ? 0 : estimateFreeThrowAttempts(ftm, ftPerc);
+    const fta = !ftm ? 0 : estimateFreeThrowAttempts(ftm, ftPerc);
     // * Name : {fta, team}
     playerFreeThrowData[name] = { fta, team };
   });
