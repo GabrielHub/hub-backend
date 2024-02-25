@@ -36,7 +36,6 @@ export const upsertPlayerData = async (snapshot: any) => {
       }
     });
 
-    // * If player does not exist, create it.
     const playerQuerySnapshot = await db
       .collection('players')
       .where('alias', 'array-contains', name)
@@ -44,10 +43,15 @@ export const upsertPlayerData = async (snapshot: any) => {
 
     // * Query for all game data and overwrite player data to fix data errors and essentially resync data
     if (playerQuerySnapshot.empty) {
+      // * If player does not exist, create it.
       await db.collection('players').add({
         name,
         alias: [name],
         ftPerc: DEFAULT_FT_PERC,
+        rating: 0,
+        ratingMovement: '',
+        ratingString: '',
+        gpSinceLastRating: 0,
         _createdAt: admin.firestore.Timestamp.now(),
         _updatedAt: admin.firestore.Timestamp.now()
       });
@@ -74,7 +78,14 @@ export const upsertPlayerData = async (snapshot: any) => {
         return { ...(doc.data() as PlayerData), id: doc.id };
       })[0];
 
-      const { name: storedName, alias, ftPerc, id } = playerData;
+      const {
+        name: storedName,
+        alias,
+        ftPerc,
+        id,
+        rating: prevRating,
+        gpSinceLastRating
+      } = playerData;
 
       // * Only calculate averages once a player has min games played
       const gameDataRef = await db.collection('games').where('name', 'in', alias).get();
@@ -84,7 +95,9 @@ export const upsertPlayerData = async (snapshot: any) => {
         gameData,
         storedName,
         alias,
-        ftPerc
+        ftPerc,
+        prevRating,
+        gpSinceLastRating
       );
 
       // * Add number of aPER games played

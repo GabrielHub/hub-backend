@@ -18,20 +18,72 @@ const isValidStatline = (stat: string, value: any): boolean => {
   );
 };
 
+const ratingThresholds = [1, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 9];
+const movedUp = '(↑)';
+const movedDown = '(↓)';
+const movedUpExtra = '(↑↑)';
+const movedDownExtra = '(↓↓)';
+
+const RATING_CONFIG = {
+  Bench: 3.5,
+  Starter: 6.5,
+  AllStar: 7.5,
+  /** Highest value is 10 */
+  MVP: 10
+};
+
+const mapRatingToString = (value: number): string => {
+  const rating = Object.keys(RATING_CONFIG)
+    .sort((a, b) => RATING_CONFIG[a] - RATING_CONFIG[b])
+    .find((key) => value <= RATING_CONFIG[key]);
+
+  return rating || 'MVP';
+};
+
+const calculateRating = (PER: number): number => {
+  // Take a PER from 0 to 35+ and convert it to a 0-10 scale. a PER of 15 is always 5
+  let rating = 10;
+  if (PER <= 0) {
+    rating = 0;
+  }
+  if (PER <= 15) {
+    rating = (PER / 15) * 5;
+  }
+  if (PER <= 35) {
+    rating = ((PER - 15) / 20) * 5 + 5;
+  }
+
+  return rating;
+};
+
 export const calculateAveragePlayerStats = (
   leagueData: LeagueData,
   gameData: GameData[],
   name: string,
   alias: string[] = [],
-  ftPerc = 50
+  ftPerc = 50,
+  prevRating: number,
+  gpSinceLastRating: number
 ) => {
   // * These are not values we want to average
   // * FT% is a constant defined by the user. We won't update this ever programmatically
-  const propertiesToSkip = ['name', 'alias', 'ftPerc'];
+  const propertiesToSkip = [
+    'name',
+    'alias',
+    'ftPerc',
+    'rating',
+    'ratingString',
+    'ratingMovement',
+    'gpSinceLastRating'
+  ];
   // * Initialize player so we can add values before dividing at the end
   const playerData: PlayerData = {
     name,
     alias: alias.length ? alias : [name],
+    rating: 0,
+    ratingString: '',
+    ratingMovement: '',
+    gpSinceLastRating,
     ftPerc,
     pace: 0,
     pts: 0,
@@ -181,6 +233,32 @@ export const calculateAveragePlayerStats = (
   const paceAdjustment = leagueData.pace / playerData.pace;
   playerData.aPER = playerData.uPER ? paceAdjustment * playerData.uPER : playerData.aPER;
   playerData.PER = playerData.aPER * (leagueData.PER / (leagueData.aPER || playerData.aPER));
+
+  // * Calculate rating
+  const shouldUpdateRating = gpSinceLastRating !== gameData.length;
+  const newRating = calculateRating(playerData.PER);
+  playerData.rating = newRating;
+  playerData.ratingString = mapRatingToString(playerData.rating);
+  playerData.ratingMovement = '';
+  if (shouldUpdateRating && prevRating && newRating) {
+    // if the rating diff crosses a threshold, note that the rating has moved up or down. if the rating is the same, remove the note. IF the rating crosses two thresholds, note that the rating has moved up or down twice
+    const currentRatingThreshold = ratingThresholds.find((threshold) => prevRating < threshold);
+    const newRatingThreshold = ratingThresholds.find((threshold) => newRating < threshold);
+    if (currentRatingThreshold && newRatingThreshold) {
+      if (currentRatingThreshold !== newRatingThreshold) {
+        if (newRating > prevRating) {
+          playerData.ratingMovement =
+            newRatingThreshold - currentRatingThreshold > 1 ? movedUpExtra : movedUp;
+        } else if (newRating < prevRating) {
+          playerData.ratingMovement =
+            newRatingThreshold - currentRatingThreshold > 1 ? movedDownExtra : movedDown;
+        }
+      } else {
+        playerData.ratingMovement = '';
+      }
+    }
+  }
+  playerData.gpSinceLastRating = gameData.length;
 
   return playerData;
 };

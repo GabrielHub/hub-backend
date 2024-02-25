@@ -53,4 +53,8 @@ export interface PlayerData {
   mp: number;
   aPERGamesPlayed?: number;
   plusMinus: number;
+  rating: number;
+  ratingString: string;
+  ratingMovement: string;
+  gpSinceLastRating: number;
 }

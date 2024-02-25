@@ -32,7 +32,14 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
       });
 
     for (const playerData of playerList) {
-      const { name: storedName, alias, ftPerc, id } = playerData;
+      const {
+        name: storedName,
+        alias,
+        ftPerc,
+        id,
+        rating: prevRating,
+        gpSinceLastRating
+      } = playerData;
 
       // * collect all games by ALIAS includes NAME and use that for the calculate function
       // * There could theoretically be bad data, and an alias could be in multiple players. Avoid this by taking the first
@@ -46,7 +53,9 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
           gameData,
           storedName,
           alias,
-          ftPerc
+          ftPerc,
+          prevRating,
+          gpSinceLastRating
         );
 
         // * Add number of aPER games played
