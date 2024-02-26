@@ -56,6 +56,16 @@ const calculateRating = (PER: number): number => {
   return rating;
 };
 
+const roundToNearestThreshold = (rating: number): number => {
+  let closest = ratingThresholds[0];
+  for (let i = 1; i < ratingThresholds.length; i++) {
+    if (Math.abs(ratingThresholds[i] - rating) < Math.abs(closest - rating)) {
+      closest = ratingThresholds[i];
+    }
+  }
+  return closest;
+};
+
 export const calculateAveragePlayerStats = (
   leagueData: LeagueData,
   gameData: GameData[],
@@ -242,8 +252,12 @@ export const calculateAveragePlayerStats = (
   playerData.ratingMovement = '';
   if (shouldUpdateRating && prevRating && newRating) {
     // if the rating diff crosses a threshold, note that the rating has moved up or down. if the rating is the same, remove the note. IF the rating crosses two thresholds, note that the rating has moved up or down twice
-    const currentRatingThreshold = ratingThresholds.find((threshold) => prevRating < threshold);
-    const newRatingThreshold = ratingThresholds.find((threshold) => newRating < threshold);
+    const currentRatingThreshold = ratingThresholds.find(
+      (threshold) => roundToNearestThreshold(prevRating) < threshold
+    );
+    const newRatingThreshold = ratingThresholds.find(
+      (threshold) => roundToNearestThreshold(newRating) < threshold
+    );
     if (currentRatingThreshold && newRatingThreshold) {
       if (currentRatingThreshold !== newRatingThreshold) {
         if (newRating > prevRating) {
