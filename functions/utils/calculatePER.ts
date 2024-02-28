@@ -29,7 +29,7 @@ export const calculateAPER = (player: PlayerData, team: TeamData, league: League
   // TODO More research into why this is sometimes a negative value
   if (aPER < 0) {
     aPER = 0;
-    PER = 15;
+    PER = 0;
   }
 
   return { aPER, PER, uPER };
