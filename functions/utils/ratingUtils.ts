@@ -4,6 +4,7 @@ export const movedUpExtra = '(↑↑)';
 export const movedDownExtra = '(↓↓)';
 
 const RATING_CONFIG = {
+  GLeague: 3,
   Bench: 4.3,
   Rotation: 5,
   Starter: 5.4,
