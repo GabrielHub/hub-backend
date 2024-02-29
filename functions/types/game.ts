@@ -44,4 +44,5 @@ export interface GameData {
   twopm: number;
   usageRate?: number;
   aPER?: number;
+  isAI: number;
 }

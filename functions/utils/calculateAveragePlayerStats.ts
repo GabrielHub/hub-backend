@@ -46,7 +46,8 @@ export const calculateAveragePlayerStats = (
     'rating',
     'ratingString',
     'ratingMovement',
-    'gpSinceLastRating'
+    'gpSinceLastRating',
+    'isAI'
   ];
   // * Initialize player so we can add values before dividing at the end
   const playerData: PlayerData = {
@@ -111,28 +112,32 @@ export const calculateAveragePlayerStats = (
   // * DRtg can be NaN if the opponent took 0 fg, so skip over games where this is the case and do different division
   const statsWithNaN = {};
 
+  let gameSize = 0;
   // * Sum the basic values (some % values are in here because they use team or opponent data)
   gameData.forEach((data) => {
-    Object.keys(data).forEach((stat) => {
-      if (
-        Object.prototype.hasOwnProperty.call(playerData, stat) &&
-        !propertiesToSkip.includes(stat)
-      ) {
-        // * check if number is NaN (skip invalid data from bad data processing)
-        if (isValidStatline(stat, data[stat])) {
-          // * Normal logic for stats that have values
-          playerData[stat] += data[stat];
-        } else if (Object.prototype.hasOwnProperty.call(statsWithNaN, stat)) {
-          // * Update it with one less games to count for the averages
-          statsWithNaN[stat] -= 1;
-        } else {
-          // * Stat may not exist in all games
-          const amountToDivideBy = getAmountToAverage(gameData, stat);
-          // * Add this stat to start counting games not including NaN games, minus 1 for the current time we're counting
-          statsWithNaN[stat] = amountToDivideBy - 1;
+    if (data.isAI !== 1) {
+      gameSize += 1;
+      Object.keys(data).forEach((stat) => {
+        if (
+          Object.prototype.hasOwnProperty.call(playerData, stat) &&
+          !propertiesToSkip.includes(stat)
+        ) {
+          // * check if number is NaN (skip invalid data from bad data processing)
+          if (isValidStatline(stat, data[stat])) {
+            // * Normal logic for stats that have values
+            playerData[stat] += data[stat];
+          } else if (Object.prototype.hasOwnProperty.call(statsWithNaN, stat)) {
+            // * Update it with one less games to count for the averages
+            statsWithNaN[stat] -= 1;
+          } else {
+            // * Stat may not exist in all games
+            const amountToDivideBy = getAmountToAverage(gameData, stat);
+            // * Add this stat to start counting games not including NaN games, minus 1 for the current time we're counting
+            statsWithNaN[stat] = amountToDivideBy - 1;
+          }
         }
-      }
-    });
+      });
+    }
   });
 
   // * Properties to total and not average
@@ -162,7 +167,7 @@ export const calculateAveragePlayerStats = (
     }
   });
 
-  playerData.gp = gameData.length;
+  playerData.gp = gameSize;
   // * Add Percentage values ie. EFG% TS% OFG% etc.
   playerData.fgPerc = round(100 * (playerData.fgm / playerData.fga), 1) || null;
   playerData.twoPerc = round(100 * (playerData.twopm / playerData.twopa), 1) || null;
@@ -207,7 +212,7 @@ export const calculateAveragePlayerStats = (
   playerData.PER = playerData.aPER * (leagueData.PER / (leagueData.aPER || playerData.aPER));
 
   // * Calculate rating
-  const shouldUpdateRating = gpSinceLastRating !== gameData.length;
+  const shouldUpdateRating = gpSinceLastRating !== gameSize;
   const newRating = calculateRating(playerData.PER);
   playerData.rating = newRating;
   playerData.ratingString = mapRatingToString(playerData.rating);
@@ -234,7 +239,7 @@ export const calculateAveragePlayerStats = (
       }
     }
   }
-  playerData.gpSinceLastRating = gameData.length;
+  playerData.gpSinceLastRating = gameSize;
 
   return playerData;
 };
