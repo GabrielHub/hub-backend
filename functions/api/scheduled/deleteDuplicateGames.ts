@@ -25,14 +25,14 @@ const similarityFieldsToCheck = [
   'oppPos'
 ];
 
-const findDuplicateGames = (games: GameData[], fields: string[]): string[] => {
+const findDuplicateGames = (games: GameData[]): string[] => {
   // Create an object to store unique combinations of property values
   const uniqueCombinations = {};
 
   // Iterate through each object in the input array
   games.forEach((game) => {
     // Generate a unique key based on the values of the specified properties
-    const key = fields.map((prop) => game[prop]).join(',');
+    const key = similarityFieldsToCheck.map((stat) => game[stat]).join(',');
 
     // If the key doesn't exist in uniqueCombinations, create an array for it
     if (!uniqueCombinations[key]) {
@@ -51,6 +51,10 @@ const findDuplicateGames = (games: GameData[], fields: string[]): string[] => {
   // Flatten the arrays of ids for duplicate keys into a single array
   const duplicateIds = [].concat(...duplicateKeys.map((key) => uniqueCombinations[key]));
 
+  // log the duplicate ids and the stats that were used to determine the duplicates
+  log('duplicateIds', duplicateIds);
+  log('duplicateKeys', duplicateKeys);
+
   // Return the array of duplicate ids
   return duplicateIds;
 };
@@ -66,7 +70,7 @@ const deleteDuplicateGames = async (): Promise<null> => {
       gameList.push({ ...(doc.data() as GameData), id: doc.id });
     });
 
-    const gamesToDelete = findDuplicateGames(gameList, similarityFieldsToCheck);
+    const gamesToDelete = findDuplicateGames(gameList);
 
     log('deleting', gamesToDelete.length, 'duplicate games');
 
