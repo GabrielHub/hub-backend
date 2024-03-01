@@ -47,6 +47,15 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
   log('uploadStats', rawTeamData, rawPlayerData);
 
   const db = admin.firestore();
+
+  // * Store raw upload data
+  const uploadRef = db.collection('uploads').doc();
+  await uploadRef.set({
+    rawTeamData,
+    rawPlayerData,
+    _createdAt: admin.firestore.Timestamp.now()
+  });
+
   // * Fetch league data for PER
   const league = await db
     .collection('league')
