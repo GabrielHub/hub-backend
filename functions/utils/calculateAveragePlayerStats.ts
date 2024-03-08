@@ -219,10 +219,10 @@ export const calculateAveragePlayerStats = (
   playerData.ratingMovement = '';
   if (shouldUpdateRating && prevRating && newRating) {
     // if the rating diff crosses a threshold, note that the rating has moved up or down. if the rating is the same, remove the note. IF the rating crosses two thresholds, note that the rating has moved up or down twice
-    const currentRatingThreshold = ratingThresholds.find(
+    const currentRatingThreshold = ratingThresholds().find(
       (threshold) => roundToNearestThreshold(prevRating) < threshold
     );
-    const newRatingThreshold = ratingThresholds.find(
+    const newRatingThreshold = ratingThresholds().find(
       (threshold) => roundToNearestThreshold(newRating) < threshold
     );
     if (currentRatingThreshold && newRatingThreshold) {

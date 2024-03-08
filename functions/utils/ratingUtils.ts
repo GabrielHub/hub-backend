@@ -22,7 +22,7 @@ export const mapRatingToString = (value: number): string => {
   return rating || 'MVP';
 };
 
-export const ratingThresholds = [0, 2.5, 5, 7.5, 10];
+export const ratingThresholds = () => Object.values(RATING_CONFIG);
 
 export const calculateRating = (PER: number): number => {
   // Take a PER from 0 to 35+ and convert it to a 0-10 scale. a PER of 15 is always 5
