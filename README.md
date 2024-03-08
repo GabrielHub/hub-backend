@@ -11,9 +11,10 @@ What can you do with it?
 3. Compare to NBA players, leveraging data from the NBA website/api
 
 ### How to deploy
-`cd hub-backend/functions`
-`firebase deploy --only functions` to deploy backend to prod
-`npm run build` => `firebase functions:shell` to run the emulator
+- `cd hub-backend/functions`
+- `firebase deploy --only functions` to deploy backend to prod
+- 
+- `npm run build` => `firebase functions:shell` to run the emulator
 
 You can test functions by adding the function to the `testFunctions` endpoint
 `app.get('/testFunctions')`
