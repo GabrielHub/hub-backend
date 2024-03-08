@@ -1,3 +1,7 @@
+export interface PlayerPositions {
+  [key: number]: number;
+}
+
 export interface PlayerData {
   name: string;
   alias: string[];
@@ -57,4 +61,5 @@ export interface PlayerData {
   ratingString: string;
   ratingMovement: string;
   gpSinceLastRating: number;
+  positions?: PlayerPositions;
 }
