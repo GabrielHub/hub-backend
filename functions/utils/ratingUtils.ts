@@ -41,10 +41,11 @@ export const calculateRating = (PER: number): number => {
 };
 
 export const roundToNearestThreshold = (rating: number): number => {
-  let closest = ratingThresholds[0];
-  for (let i = 1; i < ratingThresholds.length; i++) {
-    if (Math.abs(ratingThresholds[i] - rating) < Math.abs(closest - rating)) {
-      closest = ratingThresholds[i];
+  const ratingThresholdList = ratingThresholds();
+  let closest = ratingThresholdList[0];
+  for (let i = 1; i < ratingThresholdList.length; i++) {
+    if (Math.abs(ratingThresholdList[i] - rating) < Math.abs(closest - rating)) {
+      closest = ratingThresholdList[i];
     }
   }
   return closest;
