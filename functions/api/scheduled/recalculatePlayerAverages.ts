@@ -45,9 +45,13 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
       // * There could theoretically be bad data, and an alias could be in multiple players. Avoid this by taking the first
       // TODO Error notifications/logs if there are more than one unique alias in someone's aliases?
 
+      // * Skip AI games
       const gameDataRef = await db.collection('games').where('name', 'in', alias).get();
-      if (gameDataRef.size) {
-        const gameData = gameDataRef.docs.map((doc) => doc.data() as GameData);
+      const gameData = gameDataRef.docs
+        .map((doc) => doc.data() as GameData)
+        .filter((game) => game.isAI !== 1);
+
+      if (gameData.length) {
         const avgPlayerStats = calculateAveragePlayerStats(
           leagueData,
           gameData,

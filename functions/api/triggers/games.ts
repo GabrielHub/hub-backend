@@ -89,35 +89,41 @@ export const upsertPlayerData = async (snapshot: any) => {
 
       // * Only calculate averages once a player has min games played
       const gameDataRef = await db.collection('games').where('name', 'in', alias).get();
-      const gameData = gameDataRef.docs.map((doc) => doc.data() as GameData);
-      const avgPlayerStats = calculateAveragePlayerStats(
-        leagueData,
-        gameData,
-        storedName,
-        alias,
-        ftPerc,
-        prevRating,
-        gpSinceLastRating
-      );
+      // * Filter by non-AI games
+      const gameData = gameDataRef.docs
+        .map((doc) => doc.data() as GameData)
+        .filter((game) => game.isAI !== 1);
 
-      // * Add number of aPER games played
-      let aPERGames = 0;
-      gameData.forEach(({ aPER }) => {
-        if (aPER) {
-          aPERGames += 1;
-        }
-      });
+      if (gameData.length) {
+        const avgPlayerStats = calculateAveragePlayerStats(
+          leagueData,
+          gameData,
+          storedName,
+          alias,
+          ftPerc,
+          prevRating,
+          gpSinceLastRating
+        );
 
-      avgPlayerStats.aPERGamesPlayed = aPERGames;
-
-      await db
-        .collection('players')
-        .doc(id)
-        .set({
-          ...avgPlayerStats,
-          _createdAt: admin.firestore.Timestamp.now(),
-          _updatedAt: admin.firestore.Timestamp.now()
+        // * Add number of aPER games played
+        let aPERGames = 0;
+        gameData.forEach(({ aPER }) => {
+          if (aPER) {
+            aPERGames += 1;
+          }
         });
+
+        avgPlayerStats.aPERGamesPlayed = aPERGames;
+
+        await db
+          .collection('players')
+          .doc(id)
+          .set({
+            ...avgPlayerStats,
+            _createdAt: admin.firestore.Timestamp.now(),
+            _updatedAt: admin.firestore.Timestamp.now()
+          });
+      }
     }
 
     gameRef.update({
