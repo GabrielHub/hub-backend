@@ -1,4 +1,4 @@
-import { round, sortBy } from 'lodash';
+import { round } from 'lodash';
 import {
   movedDown,
   movedDownExtra,
@@ -30,7 +30,7 @@ const isValidStatline = (stat: string, value: any): boolean => {
 
 const fixPositions = (positions: PlayerPositions): PlayerPositions => {
   // * Sort positions by most games played, and remove the positions with 0 games played
-  const sortedPositions = sortBy(Object.entries(positions), (pos) => -pos[1]);
+  const sortedPositions = Object.entries(positions).sort((a, b) => b[1] - a[1]);
   const filteredPositions = sortedPositions.filter((pos) => pos[1] > 0);
   return filteredPositions.reduce((acc, [key, value]) => {
     acc[key] = value;

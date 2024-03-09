@@ -25,30 +25,16 @@ const STATS_TO_ADD = [
   'ftm',
   'pace',
   'gameScore',
-  'usageRate'
+  'usageRate',
+  'tovPerc',
+  'gp',
+  'aPER'
 ];
-
-/**
- * @description finds amount to divide by for stats that aren't valid across all players (APER and PACE)
- * @param {*} playerList
- * @param {*} stat
- * @return {number}
- */
-const getMissingStatAmount = (playerList: PlayerData[], stat: string): number => {
-  return playerList.reduce((count, player) => {
-    if (player?.[stat]) {
-      return count + 1;
-    }
-    return count;
-  }, 0);
-};
 
 const generateLeagueAverage = async (): Promise<null> => {
   const db = admin.firestore();
 
   log('running generateLeagueAverage');
-  // * Missing Data, data that may not be there for all players
-  const MISSING_DATA = ['pace', 'aPER'];
 
   try {
     const querySnapshot = await db.collection('players').get();
@@ -56,51 +42,61 @@ const generateLeagueAverage = async (): Promise<null> => {
     const playerList: PlayerData[] = [];
     querySnapshot.docs.forEach((doc) => {
       const playerData = doc.data();
-      // * Players only have averages past 5 games, make sure data exists first
-      if (playerData?.gp) {
+      // * Don't count a player until they've played at least 2 valid games
+      if (playerData?.gp && playerData?.gp > 1) {
         playerList.push(playerData as PlayerData);
       }
     });
 
     // * Initialize averages with 0 for each stat
     const averageGameStats = {
-      PER: 15,
-      aPER: 0
+      PER: 15
     };
     STATS_TO_ADD.forEach((stat) => {
       averageGameStats[stat] = 0;
     });
 
-    // * Average stats per game played for each player
-    playerList.forEach((playerData) => {
-      STATS_TO_ADD.forEach((stat) => {
-        if (playerData[stat]) {
-          averageGameStats[stat] += playerData[stat];
-        }
-      });
+    // Initialize a separate count for each stat
+    const gamesPlayedCounts = {};
+    STATS_TO_ADD.forEach((stat) => {
+      gamesPlayedCounts[stat] = 0;
     });
-    Object.keys(averageGameStats).forEach((stat) => {
-      // * For now hardcode this missing stat (pace)
-      if (MISSING_DATA.includes(stat)) {
-        const paceLength = getMissingStatAmount(playerList, stat);
-        averageGameStats[stat] = round(averageGameStats[stat] / paceLength, 1);
-      } else {
-        averageGameStats[stat] = round(averageGameStats[stat] / playerList.length, 1);
+
+    // Initialize total games played
+    let totalGamesPlayed = 0;
+
+    // Average stats per game played for each player
+    playerList.forEach((playerData) => {
+      const gp = playerData?.['gp'];
+      if (gp && Number.isFinite(gp)) {
+        totalGamesPlayed += gp;
+        STATS_TO_ADD.forEach((stat) => {
+          if (playerData[stat] && Number.isFinite(playerData[stat])) {
+            averageGameStats[stat] += playerData[stat] / gp;
+            gamesPlayedCounts[stat] += gp;
+          }
+        });
       }
     });
 
-    // * Average aPER should be done on a per game basis (not per player) to account for minutes played
-    let sumOfAPER = 0;
-    let gamesWithAPER = 0;
-    playerList.forEach(({ aPER, aPERGamesPlayed }) => {
-      if (aPER && aPERGamesPlayed) {
-        sumOfAPER += aPER * aPERGamesPlayed;
-        gamesWithAPER += aPERGamesPlayed;
-      }
+    // Calculate averages
+    Object.keys(averageGameStats).forEach((stat) => {
+      averageGameStats[stat] = round(averageGameStats[stat] / gamesPlayedCounts[stat], 1);
     });
-    const aPER = sumOfAPER / gamesWithAPER;
-    averageGameStats.aPER = aPER;
-    /** Set league average PER to 15 as per Hollinger https://www.basketball-reference.com/about/per.html  */
+
+    // Add calculations for FG%, 3PT%, and EFG%
+    averageGameStats['fgPerc'] = averageGameStats['fgm'] / averageGameStats['fga'];
+    averageGameStats['threepPerc'] = averageGameStats['threepm'] / averageGameStats['threepa'];
+    averageGameStats['efgPerc'] =
+      (averageGameStats['fgm'] + 0.5 * averageGameStats['threepm']) / averageGameStats['fga'];
+
+    // Add calculations for AST/TO ratio
+    averageGameStats['astToRatio'] = averageGameStats['ast'] / averageGameStats['tov'];
+
+    // Add total games played to the league averages
+    averageGameStats['totalGamesPlayed'] = totalGamesPlayed;
+
+    // * Average PER is always 15
     averageGameStats.PER = 15;
 
     await db.collection('league').add({
