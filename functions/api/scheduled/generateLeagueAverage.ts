@@ -50,10 +50,14 @@ const generateLeagueAverage = async (): Promise<null> => {
 
     // * Initialize averages with 0 for each stat
     const averageGameStats = {
-      PER: 15
+      PER: 15,
+      totalStats: {}
     };
+    // Initialize totals for each stat
+    const totalStats = {};
     STATS_TO_ADD.forEach((stat) => {
       averageGameStats[stat] = 0;
+      totalStats[stat] = 0;
     });
 
     // Initialize a separate count for each stat
@@ -62,18 +66,15 @@ const generateLeagueAverage = async (): Promise<null> => {
       gamesPlayedCounts[stat] = 0;
     });
 
-    // Initialize total games played
-    let totalGamesPlayed = 0;
-
     // Average stats per game played for each player
     playerList.forEach((playerData) => {
       const gp = playerData?.['gp'];
       if (gp && Number.isFinite(gp)) {
-        totalGamesPlayed += gp;
         STATS_TO_ADD.forEach((stat) => {
           if (playerData[stat] && Number.isFinite(playerData[stat])) {
             averageGameStats[stat] += playerData[stat] / gp;
             gamesPlayedCounts[stat] += gp;
+            totalStats[stat] += playerData[stat];
           }
         });
       }
@@ -93,8 +94,7 @@ const generateLeagueAverage = async (): Promise<null> => {
     // Add calculations for AST/TO ratio
     averageGameStats['astToRatio'] = averageGameStats['ast'] / averageGameStats['tov'];
 
-    // Add total games played to the league averages
-    averageGameStats['totalGamesPlayed'] = totalGamesPlayed;
+    averageGameStats.totalStats = totalStats;
 
     // * Average PER is always 15
     averageGameStats.PER = 15;
