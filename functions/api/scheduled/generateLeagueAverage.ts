@@ -2,7 +2,6 @@ import admin from 'firebase-admin';
 import { log, error } from 'firebase-functions/logger';
 import dayjs from 'dayjs';
 import { PlayerData } from '../../types';
-import { round } from 'lodash';
 
 const STATS_TO_ADD = [
   'pts',
@@ -42,8 +41,7 @@ const generateLeagueAverage = async (): Promise<null> => {
     const playerList: PlayerData[] = [];
     querySnapshot.docs.forEach((doc) => {
       const playerData = doc.data();
-      // * Don't count a player until they've played at least 2 valid games
-      if (playerData?.gp && playerData?.gp > 1) {
+      if (playerData?.gp) {
         playerList.push(playerData as PlayerData);
       }
     });
@@ -51,14 +49,20 @@ const generateLeagueAverage = async (): Promise<null> => {
     // * Initialize averages with 0 for each stat
     const averageGameStats = {
       PER: 15,
-      totalStats: {}
+      totalStats: {
+        gp: 0
+      }
     };
     // Initialize totals for each stat
-    const totalStats = {};
+    const totalStats = {
+      gp: 0
+    };
     STATS_TO_ADD.forEach((stat) => {
       averageGameStats[stat] = 0;
       totalStats[stat] = 0;
     });
+
+    let totalGamesPlayed = 0;
 
     // Initialize a separate count for each stat
     const gamesPlayedCounts = {};
@@ -70,11 +74,12 @@ const generateLeagueAverage = async (): Promise<null> => {
     playerList.forEach((playerData) => {
       const gp = playerData?.['gp'];
       if (gp && Number.isFinite(gp)) {
+        totalGamesPlayed += gp;
         STATS_TO_ADD.forEach((stat) => {
-          if (playerData[stat] && Number.isFinite(playerData[stat])) {
-            averageGameStats[stat] += playerData[stat] / gp;
-            gamesPlayedCounts[stat] += gp;
-            totalStats[stat] += playerData[stat];
+          if (typeof playerData[stat] === 'number' && Number.isFinite(playerData[stat])) {
+            averageGameStats[stat] += playerData[stat];
+            gamesPlayedCounts[stat] += 1;
+            totalStats[stat] += playerData[stat] * gp;
           }
         });
       }
@@ -82,19 +87,23 @@ const generateLeagueAverage = async (): Promise<null> => {
 
     // Calculate averages
     Object.keys(averageGameStats).forEach((stat) => {
-      averageGameStats[stat] = round(averageGameStats[stat] / gamesPlayedCounts[stat], 1);
+      averageGameStats[stat] =
+        gamesPlayedCounts[stat] !== 0 ? averageGameStats[stat] / gamesPlayedCounts[stat] : 0;
     });
 
     // Add calculations for FG%, 3PT%, and EFG%
-    averageGameStats['fgPerc'] = averageGameStats['fgm'] / averageGameStats['fga'];
-    averageGameStats['threepPerc'] = averageGameStats['threepm'] / averageGameStats['threepa'];
+    averageGameStats['fgPerc'] = (averageGameStats['fgm'] / averageGameStats['fga']) * 100;
+    averageGameStats['threepPerc'] =
+      (averageGameStats['threepm'] / averageGameStats['threepa']) * 100;
     averageGameStats['efgPerc'] =
-      (averageGameStats['fgm'] + 0.5 * averageGameStats['threepm']) / averageGameStats['fga'];
+      ((averageGameStats['fgm'] + 0.5 * averageGameStats['threepm']) / averageGameStats['fga']) *
+      100;
 
     // Add calculations for AST/TO ratio
     averageGameStats['astToRatio'] = averageGameStats['ast'] / averageGameStats['tov'];
 
     averageGameStats.totalStats = totalStats;
+    averageGameStats.totalStats.gp = totalGamesPlayed;
 
     // * Average PER is always 15
     averageGameStats.PER = 15;
