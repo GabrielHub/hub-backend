@@ -34,7 +34,21 @@ const fetchPlayerData = async (req: any, res: Response): Promise<void> => {
     return;
   }
 
-  let response: PlayerData = playerData;
+  let avgPlayerData: PlayerData = playerData;
+
+  // * Get league data to recalculate PER based on league averages, plus use for comparison analysis
+  const leagueData = await db
+    .collection('league')
+    .orderBy('createdAt', 'desc')
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      const league: LeagueData[] = [];
+      querySnapshot.forEach((doc) => {
+        league.push(doc.data() as LeagueData);
+      });
+      return league[0];
+    });
 
   // * Recalculate player averages based on position
   if (position) {
@@ -42,20 +56,6 @@ const fetchPlayerData = async (req: any, res: Response): Promise<void> => {
     const gameData = gameDataRef.docs
       .map((doc) => doc.data() as GameData)
       .filter((game) => game.isAI !== 1 && game.pos === position);
-
-    // * Get league data to recalculate PER based on league averages, plus use for comparison analysis
-    const leagueData = await db
-      .collection('league')
-      .orderBy('createdAt', 'desc')
-      .limit(1)
-      .get()
-      .then((querySnapshot) => {
-        const league: LeagueData[] = [];
-        querySnapshot.forEach((doc) => {
-          league.push(doc.data() as LeagueData);
-        });
-        return league[0];
-      });
 
     if (gameData.length) {
       const avgPlayerStats = calculateAveragePlayerStats(
@@ -68,13 +68,18 @@ const fetchPlayerData = async (req: any, res: Response): Promise<void> => {
         playerData.gpSinceLastRating
       );
 
-      response = avgPlayerStats;
+      avgPlayerData = avgPlayerStats;
     } else {
       error('No games found for this player');
       res.status(404).send('No games found for this player');
       return;
     }
   }
+
+  const response = {
+    playerData: avgPlayerData,
+    leagueData
+  };
 
   res.send(response);
 };
