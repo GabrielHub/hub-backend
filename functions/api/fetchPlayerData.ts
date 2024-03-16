@@ -55,7 +55,7 @@ const fetchPlayerData = async (req: any, res: Response): Promise<void> => {
     const gameDataRef = await db.collection('games').where('name', 'in', playerData.alias).get();
     const gameData = gameDataRef.docs
       .map((doc) => doc.data() as GameData)
-      .filter((game) => game.isAI !== 1 && game.pos === position);
+      .filter((game) => game.isAI !== 1 && game.pos == position);
 
     if (gameData.length) {
       const avgPlayerStats = calculateAveragePlayerStats(
@@ -67,6 +67,9 @@ const fetchPlayerData = async (req: any, res: Response): Promise<void> => {
         playerData.rating,
         playerData.gpSinceLastRating
       );
+
+      // * Fix positional data for dropdown etc.
+      avgPlayerStats.positions = avgPlayerData.positions;
 
       avgPlayerData = avgPlayerStats;
     } else {
