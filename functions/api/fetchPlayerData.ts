@@ -13,7 +13,8 @@ const fetchPlayerData = async (req: any, res: Response): Promise<void> => {
     throw new Error('Invalid playerId parameter passed');
   }
 
-  if (position && (position > 5 || position < 1)) {
+  // * 0 is for all positions
+  if (position && (position > 5 || position < 0)) {
     res.status(400).send('Invalid position parameter passed');
     throw new Error('Invalid position parameter passed');
   }
