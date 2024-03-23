@@ -44,9 +44,11 @@ export const upsertPlayerData = async (snapshot: any) => {
     // * Query for all game data and overwrite player data to fix data errors and essentially resync data
     if (playerQuerySnapshot.empty) {
       // * If player does not exist, create it.
+      // * Create a lowercase alias for the player. Remove duplicates
+      const alias = Array.from(new Set([name, name.toLowerCase()]));
       await db.collection('players').add({
         name,
-        alias: [name],
+        alias,
         ftPerc: DEFAULT_FT_PERC,
         rating: 0,
         ratingMovement: '',

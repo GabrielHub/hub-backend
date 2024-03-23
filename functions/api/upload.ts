@@ -43,9 +43,12 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
   const teamReboundData = {};
   const playerReboundData = {};
   const playerFreeThrowData = {};
+  // * Force all player names to be lowercase
+  rawPlayerData.forEach((player) => {
+    player.name = player.name.toLowerCase();
+  });
 
   log('uploadStats', rawTeamData, rawPlayerData);
-
   const db = admin.firestore();
 
   // * Store raw upload data
