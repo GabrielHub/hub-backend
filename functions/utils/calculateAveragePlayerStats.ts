@@ -58,7 +58,8 @@ export const calculateAveragePlayerStats = (
     'ratingMovement',
     'gpSinceLastRating',
     'isAI',
-    'positions'
+    'positions',
+    'uploadId'
   ];
   // * Initialize player so we can add values before dividing at the end
   const playerData: PlayerData = {

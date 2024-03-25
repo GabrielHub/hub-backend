@@ -45,4 +45,5 @@ export interface GameData {
   usageRate?: number;
   aPER?: number;
   isAI: number;
+  uploadId?: string;
 }

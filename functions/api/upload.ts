@@ -51,11 +51,12 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
   log('uploadStats', rawTeamData, rawPlayerData);
   const db = admin.firestore();
 
-  // * Store raw upload data
+  // * Store upload team and player data
   const uploadRef = db.collection('uploads').doc();
+  const uploadId = uploadRef.id;
   await uploadRef.set({
-    rawTeamData,
-    rawPlayerData,
+    teamData: rawTeamData,
+    playerData: rawPlayerData,
     _createdAt: admin.firestore.Timestamp.now()
   });
 
@@ -334,6 +335,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     const gamesRef = admin.firestore().collection('games').doc();
     batch.set(gamesRef, {
       ...player,
+      uploadId,
       _createdAt: admin.firestore.Timestamp.now(),
       _updatedAt: admin.firestore.Timestamp.now()
     });
