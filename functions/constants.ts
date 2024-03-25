@@ -1,3 +1,5 @@
+import { defineSecret } from 'firebase-functions/params';
+
 export const whitelist = [
   'http://localhost:3000',
   'https://gabrielhub.github.io/hub',
@@ -5,8 +7,7 @@ export const whitelist = [
   'gabrielhub-60a30.firebaseapp.com'
 ];
 
-export const UPLOAD_KEY = process.env.HUB_UPLOADKEY;
-export const NANONET_KEY = process.env.HUB_NANONETKEY;
+export const UPLOAD_KEY = defineSecret('HUB_UPLOAD_KEY');
 export const DEFAULT_FT_PERC = 67;
 
 // * For NBA Comparison
