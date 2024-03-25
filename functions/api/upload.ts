@@ -29,7 +29,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
   const rawTeamData: TotalRawTeamData = uploadRawTeamData;
   const rawPlayerData: RawPlayerData[] = uploadRawPlayerData;
 
-  if (!key || typeof key !== 'string' || key !== UPLOAD_KEY) {
+  if (!key || typeof key !== 'string' || key !== UPLOAD_KEY.value()) {
     warn('Upload: Invalid key');
     res.status(401).send('Invalid key');
   }

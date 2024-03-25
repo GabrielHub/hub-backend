@@ -7,7 +7,7 @@ export const whitelist = [
   'gabrielhub-60a30.firebaseapp.com'
 ];
 
-export const UPLOAD_KEY = defineSecret('HUB_UPLOAD_KEY').value;
+export const UPLOAD_KEY = defineSecret('HUB_UPLOAD_KEY');
 export const DEFAULT_FT_PERC = 67;
 
 // * For NBA Comparison
