@@ -4,7 +4,7 @@ import cors from 'cors';
 import express from 'express';
 
 import { corsOptionsDelegate } from '../utils/corsOptionsDelegate';
-import { checkIfAuthenticated } from './auth';
+import { checkIfAdmin } from './auth';
 
 // * Rest functions
 import uploadStats from '../api/upload';
@@ -32,16 +32,11 @@ const app = express();
 app.use(cors());
 
 // * REST endpoints
-app.post('/upload', cors(corsOptionsDelegate), checkIfAuthenticated, uploadStats);
-app.get('/testFunctions', cors(corsOptionsDelegate), checkIfAuthenticated, testFirebaseStuff);
+app.post('/upload', cors(corsOptionsDelegate), checkIfAdmin, uploadStats);
+app.get('/testFunctions', cors(corsOptionsDelegate), checkIfAdmin, testFirebaseStuff);
 app.post('/queryTableData', cors(corsOptionsDelegate), fetchForTable);
 app.get('/lookupPlayer', cors(corsOptionsDelegate), fetchPlayerData);
-app.post(
-  '/updatePlayerDetails',
-  cors(corsOptionsDelegate),
-  checkIfAuthenticated,
-  updatePlayerDetails
-);
+app.post('/updatePlayerDetails', cors(corsOptionsDelegate), checkIfAdmin, updatePlayerDetails);
 app.get('/ranking', cors(corsOptionsDelegate), fetchIndividualRanking);
 app.get('/fetchLastGames', cors(corsOptionsDelegate), fetchLastGames);
 app.get('/league', cors(corsOptionsDelegate), fetchLeagueAverages);

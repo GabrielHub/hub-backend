@@ -9,21 +9,30 @@ const getAuthToken = (req, res, next) => {
   next();
 };
 
+export const checkIfAdmin = (req, res, next) => {
+  getAuthToken(req, res, async () => {
+    try {
+      const { authToken } = req;
+      const userInfo = await admin.auth().verifyIdToken(authToken);
+
+      if (userInfo.admin === true) {
+        req.authId = userInfo.uid;
+        return next();
+      }
+
+      throw new Error('unauthorized');
+    } catch (e) {
+      return res.status(401).send({ error: 'You are not authorized to make this request' });
+    }
+  });
+};
+
 export const checkIfAuthenticated = async (req, res, next) => {
   getAuthToken(req, res, async () => {
     try {
       const { authToken } = req;
       const userInfo = await admin.auth().verifyIdToken(authToken);
       req.authId = userInfo.uid;
-
-      // * Also check their custom claims for the admin flag
-      const user = await admin.auth().getUser(userInfo.uid);
-      const customClaims = user.customClaims;
-      if (!customClaims?.admin) {
-        return res
-          .status(401)
-          .send({ error: 'You do not have the correct permissions to make this request' });
-      }
 
       return next();
     } catch (e) {
