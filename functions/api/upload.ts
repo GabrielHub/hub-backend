@@ -11,7 +11,7 @@ import {
   estimateFreeThrowAttempts,
   getExpectedORebounds
 } from '../utils';
-import { DEFAULT_FT_PERC, UPLOAD_KEY } from '../constants';
+import { DEFAULT_FT_PERC } from '../constants';
 import { LeagueData, RawPlayerData, RawTeamData, TotalRawTeamData } from '../types';
 
 // ? Used to estimate OREB
@@ -24,15 +24,10 @@ interface PlayerFTData {
 }
 
 const uploadStats = async (req: any, res: any): Promise<void> => {
-  const { rawTeamData: uploadRawTeamData, rawPlayerData: uploadRawPlayerData, key } = req.body;
+  const { rawTeamData: uploadRawTeamData, rawPlayerData: uploadRawPlayerData } = req.body;
 
   const rawTeamData: TotalRawTeamData = uploadRawTeamData;
   const rawPlayerData: RawPlayerData[] = uploadRawPlayerData;
-
-  if (!key || typeof key !== 'string' || key !== UPLOAD_KEY.value()) {
-    warn('Upload: Invalid key');
-    res.status(401).send('Invalid key');
-  }
 
   if (!rawTeamData || !rawPlayerData) {
     warn('Upload: Invalid data');
