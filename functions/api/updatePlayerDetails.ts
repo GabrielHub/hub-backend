@@ -13,8 +13,11 @@ type IRequest = Request & {
   body: IRequestBody;
 };
 
-// TODO This is updated on the honor system... there must be some way to authenticate without logging in?
-// * For individual player pages (FT% and alias only)
+/**
+ * @deprecated replaced with front end dashboard functions
+ * @param {IRequest} req {IRequest}
+ * @param {Response} res {Response}
+ */
 const updatePlayerDetails = async (req: IRequest, res: Response): Promise<void> => {
   // * aliasesToAdd only contains the new aliases to check against the database
   // * alias is the existing alias array

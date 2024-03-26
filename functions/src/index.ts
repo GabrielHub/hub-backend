@@ -11,11 +11,11 @@ import uploadStats from '../api/upload';
 import fetchForTable from '../api/fetchForTable';
 import testFirebaseStuff from '../api/testFirebaseStuff';
 import fetchPlayerData from '../api/fetchPlayerData';
-import updatePlayerDetails from '../api/updatePlayerDetails';
 import fetchIndividualRanking from '../api/ranking';
 import fetchLastGames from '../api/fetchLastGames';
 import fetchLeagueAverages from '../api/fetchLeagueAverages';
 import compareToNBA from '../api/compareToNBA';
+import { recalculatePlayerAverageAPI, generateLeagueAverageAPI } from '../api/dashboardFunctions';
 
 // * Cloud triggers
 import { upsertPlayerData } from '../api/triggers/games';
@@ -35,8 +35,19 @@ app.use(cors());
 app.post('/upload', cors(corsOptionsDelegate), checkIfAdmin, uploadStats);
 app.get('/testFunctions', cors(corsOptionsDelegate), checkIfAdmin, testFirebaseStuff);
 app.post('/queryTableData', cors(corsOptionsDelegate), fetchForTable);
+app.get(
+  '/recalculatePlayerAverages',
+  cors(corsOptionsDelegate),
+  checkIfAdmin,
+  recalculatePlayerAverageAPI
+);
+app.get(
+  '/generateLeagueAverage',
+  cors(corsOptionsDelegate),
+  checkIfAdmin,
+  generateLeagueAverageAPI
+);
 app.get('/lookupPlayer', cors(corsOptionsDelegate), fetchPlayerData);
-app.post('/updatePlayerDetails', cors(corsOptionsDelegate), checkIfAdmin, updatePlayerDetails);
 app.get('/ranking', cors(corsOptionsDelegate), fetchIndividualRanking);
 app.get('/fetchLastGames', cors(corsOptionsDelegate), fetchLastGames);
 app.get('/league', cors(corsOptionsDelegate), fetchLeagueAverages);
