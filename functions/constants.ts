@@ -3,8 +3,8 @@ import { defineSecret } from 'firebase-functions/params';
 export const whitelist = [
   'http://localhost:3000',
   'https://gabrielhub.github.io/hub',
-  'gabrielhub-60a30.web.app',
-  'gabrielhub-60a30.firebaseapp.com'
+  'https://gabrielhub-60a30.web.app',
+  'https://gabrielhub-60a30.firebaseapp.com'
 ];
 
 export const UPLOAD_KEY = defineSecret('HUB_UPLOAD_KEY');
