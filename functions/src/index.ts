@@ -2,6 +2,7 @@ import { https, firestore, pubsub, auth } from 'firebase-functions';
 import admin from 'firebase-admin';
 import cors from 'cors';
 import express from 'express';
+import { rateLimit } from 'express-rate-limit';
 
 import { corsOptionsDelegate } from '../utils/corsOptionsDelegate';
 import { checkIfAdmin } from './auth';
@@ -26,32 +27,40 @@ import deleteDuplicateGames from '../api/scheduled/deleteDuplicateGames';
 import generateLeagueAverage from '../api/scheduled/generateLeagueAverage';
 import { recalculatePlayerAverages } from '../api/scheduled/recalculatePlayerAverages';
 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false // Disable the `X-RateLimit-*` headers
+});
+
 admin.initializeApp();
 
 const app = express();
-app.use(cors());
+app.use(cors(corsOptionsDelegate));
+app.use(limiter);
 
 // * REST endpoints
-app.post('/upload', cors(corsOptionsDelegate), checkIfAdmin, uploadStats);
-app.get('/testFunctions', cors(corsOptionsDelegate), checkIfAdmin, testFirebaseStuff);
-app.post('/queryTableData', cors(corsOptionsDelegate), fetchForTable);
+app.post('/upload', checkIfAdmin, uploadStats);
+app.get('/testFunctions', checkIfAdmin, testFirebaseStuff);
+app.post('/queryTableData', fetchForTable);
 app.get(
   '/recalculatePlayerAverages',
-  cors(corsOptionsDelegate),
+
   checkIfAdmin,
   recalculatePlayerAverageAPI
 );
 app.get(
   '/generateLeagueAverage',
-  cors(corsOptionsDelegate),
+
   checkIfAdmin,
   generateLeagueAverageAPI
 );
-app.get('/lookupPlayer', cors(corsOptionsDelegate), fetchPlayerData);
-app.get('/ranking', cors(corsOptionsDelegate), fetchIndividualRanking);
-app.get('/fetchLastGames', cors(corsOptionsDelegate), fetchLastGames);
-app.get('/league', cors(corsOptionsDelegate), fetchLeagueAverages);
-app.get('/similarity', cors(corsOptionsDelegate), compareToNBA);
+app.get('/lookupPlayer', fetchPlayerData);
+app.get('/ranking', fetchIndividualRanking);
+app.get('/fetchLastGames', fetchLastGames);
+app.get('/league', fetchLeagueAverages);
+app.get('/similarity', compareToNBA);
 
 exports.app = https.onRequest(app);
 
