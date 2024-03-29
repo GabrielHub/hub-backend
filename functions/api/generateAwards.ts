@@ -32,7 +32,7 @@ export const generateAwards = async (req: Request, res: Response) => {
       player.topPositions = [sortedPositions[0], sortedPositions[1]];
     });
 
-    const playerList = rawPlayerList.sort((a, b) => b.PER - a.PER);
+    const playerList = rawPlayerList.sort((a, b) => b.aPER - a.aPER);
     const minGamesPlayerList = playerList.filter((player) => player.gp >= 25);
     const minFGAPlayerList = playerList.filter((player) => player.fga * player.gp >= 300);
     const min3PAPlayerList = playerList.filter((player) => player.threepa * player.gp >= 82);
@@ -189,10 +189,10 @@ export const generateAwards = async (req: Request, res: Response) => {
     }, minFGAPlayerList[0]);
 
     // * All NBA First team is the top 5 players with the highest PER, min 25 games
-    const allNBAFirst = minFGAPlayerList.slice(0, 5);
+    const allNBAFirst = minGamesPlayerList.slice(0, 5);
 
     // * All NBA Second team is the top 5 players with the highest PER after allNBAFirst, min 25 games
-    const allNBASecond = minFGAPlayerList.slice(5, 11);
+    const allNBASecond = minGamesPlayerList.slice(5, 10);
 
     const awards: Award = {
       mvp: { id: mvp.id, name: mvp.name, value: mvp.aPER, positions: mvp.topPositions },
