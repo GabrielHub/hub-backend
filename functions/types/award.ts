@@ -2,6 +2,7 @@ interface AwardObject {
   id: string;
   name: string;
   value: number | string;
+  positions?: string[] | number[];
 }
 
 export interface Award {

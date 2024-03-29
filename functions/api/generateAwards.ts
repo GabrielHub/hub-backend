@@ -6,6 +6,7 @@ import { PlayerData, Award } from '../types';
 
 interface iPlayerData extends PlayerData {
   id: string;
+  topPositions?: string[] | number[];
 }
 
 export const generateAwards = async (req: Request, res: Response) => {
@@ -21,6 +22,14 @@ export const generateAwards = async (req: Request, res: Response) => {
         const player: iPlayerData = { ...playerData, id: doc.id };
         playerList.push(player);
       }
+    });
+
+    // * Set the two most played positions for each player as the topPositions array
+    playerList.forEach((player) => {
+      const sortedPositions = Object.entries(player.positions || {})
+        .sort(([, a], [, b]) => b - a)
+        .map(([key]) => key);
+      player.topPositions = [sortedPositions[0], sortedPositions[1]];
     });
 
     // * Get the poaDefender sub collection for each player, and the document with the id lock from that sub collection
@@ -189,61 +198,86 @@ export const generateAwards = async (req: Request, res: Response) => {
     const allNBASecond = sortedPlayers.slice(5, 10);
 
     const awards: Award = {
-      mvp: { id: mvp.id, name: mvp.name, value: mvp.aPER },
-      dpoy: { id: dpoy.id, name: dpoy.name, value: dpoy.drtg },
+      mvp: { id: mvp.id, name: mvp.name, value: mvp.aPER, positions: mvp.topPositions },
+      dpoy: { id: dpoy.id, name: dpoy.name, value: dpoy.drtg, positions: dpoy.topPositions },
       poaDefender: { id: poaDefender.id, name: poaDefender.name, value: poaDefender.drtg },
       bestShooter: {
         id: bestShooter.id,
         name: bestShooter.name,
-        value: `${bestShooter.threePerc} ${bestShooter.threepa} ${bestShooter.threepAR}`
+        value: `${bestShooter.threePerc} ${bestShooter.threepa} ${bestShooter.threepAR}`,
+        positions: bestShooter.topPositions
       },
       worstShooter: {
         id: worstShooter.id,
         name: worstShooter.name,
-        value: `${worstShooter.threePerc} ${worstShooter.threepAR}`
+        value: `${worstShooter.threePerc} ${worstShooter.threepAR}`,
+        positions: worstShooter.topPositions
       },
-      mostActive: { id: mostActive.id, name: mostActive.name, value: mostActive?.gp || 0 },
-      mostUsed: { id: mostUsed.id, name: mostUsed.name, value: mostUsed.usageRate },
-      leastUsed: { id: leastUsed.id, name: leastUsed.name, value: leastUsed.usageRate },
+      mostActive: {
+        id: mostActive.id,
+        name: mostActive.name,
+        value: mostActive?.gp || 0,
+        positions: mostActive.topPositions
+      },
+      mostUsed: {
+        id: mostUsed.id,
+        name: mostUsed.name,
+        value: mostUsed.usageRate,
+        positions: mostUsed.topPositions
+      },
+      leastUsed: {
+        id: leastUsed.id,
+        name: leastUsed.name,
+        value: leastUsed.usageRate,
+        positions: leastUsed.topPositions
+      },
       mostEfficient: {
         id: mostEfficient.id,
         name: mostEfficient.name,
-        value: mostEfficient?.efgPerc || 0
+        value: mostEfficient?.efgPerc || 0,
+        positions: mostEfficient.topPositions
       },
       leastEfficient: {
         id: leastEfficient.id,
         name: leastEfficient.name,
-        value: leastEfficient?.efgPerc || 0
+        value: leastEfficient?.efgPerc || 0,
+        positions: leastEfficient.topPositions
       },
       shotChucker: {
         id: shotChucker.id,
         name: shotChucker.name,
-        value: `${shotChucker?.efgPerc} ${shotChucker.fga}`
+        value: `${shotChucker?.efgPerc} ${shotChucker.fga}`,
+        positions: shotChucker.topPositions
       },
       fastbreakPlayer: {
         id: fastbreakPlayer.id,
         name: fastbreakPlayer.name,
-        value: `${fastbreakPlayer.pace} ${fastbreakPlayer.fga}`
+        value: `${fastbreakPlayer.pace} ${fastbreakPlayer.fga}`,
+        positions: fastbreakPlayer.topPositions
       },
       mostAttacked: {
         id: mostAttacked.id,
         name: mostAttacked.name,
-        value: mostAttacked.oFGA
+        value: mostAttacked.oFGA,
+        positions: mostAttacked.topPositions
       },
       bestIntimidator: {
         id: bestIntimidator.id,
         name: bestIntimidator.name,
-        value: `${bestIntimidator.oEFGPerc} ${bestIntimidator.oFGA}`
+        value: `${bestIntimidator.oEFGPerc} ${bestIntimidator.oFGA}`,
+        positions: bestIntimidator.topPositions
       },
       allNBAFirst: allNBAFirst.map((player) => ({
         id: player.id,
         name: player.name,
-        value: Math.floor(player.rating)
+        value: Math.floor(player.rating),
+        positions: player.topPositions
       })),
       allNBASecond: allNBASecond.map((player) => ({
         id: player.id,
         name: player.name,
-        value: Math.floor(player.rating)
+        value: Math.floor(player.rating),
+        positions: player.topPositions
       }))
     };
 
