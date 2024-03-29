@@ -54,6 +54,7 @@ export const calculateAveragePlayerStats = (
   // * Initialize player so we can add values before dividing at the end
   const playerData: PlayerData = {
     name,
+    gp: 0,
     alias: alias.length ? alias : [name],
     rating: 0,
     ratingString: '',

@@ -1,22 +1,24 @@
 import admin from 'firebase-admin';
 import { error } from 'firebase-functions/logger';
 import { Response } from 'express';
-import { GameData, LeagueData, PlayerData } from '../types';
-import { calculateAveragePlayerStats } from '../utils';
+import { LeagueData, PlayerData } from '../types';
 
 // * For individual player pages
-const fetchPlayerData = async (req: any, res: Response): Promise<void> => {
-  const { playerID, position } = req.query;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const fetchPlayerData = async (req: any, res: Response): Promise<Response<any>> => {
+  const { playerID, position, lock } = req.query;
 
   if (!playerID || typeof playerID !== 'string') {
-    res.status(400).send('Invalid playerId parameter passed');
-    throw new Error('Invalid playerId parameter passed');
+    return res.status(400).send('Invalid playerId parameter passed');
   }
 
   // * 0 is for all positions
   if (position && (position > 5 || position < 0)) {
-    res.status(400).send('Invalid position parameter passed');
-    throw new Error('Invalid position parameter passed');
+    return res.status(400).send('Invalid position parameter passed');
+  }
+
+  if (lock && lock !== 1) {
+    return res.status(400).send('Invalid lock parameter passed');
   }
 
   const db = admin.firestore();
@@ -31,13 +33,11 @@ const fetchPlayerData = async (req: any, res: Response): Promise<void> => {
 
   if (!playerData?.gp) {
     error('No games played for this player');
-    res.status(404).send('No games played for this player');
-    return;
+    return res.status(404).send('No games played for this player');
   }
 
   let avgPlayerData: PlayerData = playerData;
 
-  // * Get league data to recalculate PER based on league averages, plus use for comparison analysis
   const leagueData = await db
     .collection('league')
     .orderBy('createdAt', 'desc')
@@ -51,33 +51,50 @@ const fetchPlayerData = async (req: any, res: Response): Promise<void> => {
       return league[0];
     });
 
-  // * Recalculate player averages based on position
-  if (position) {
-    const gameDataRef = await db.collection('games').where('name', 'in', playerData.alias).get();
-    const gameData = gameDataRef.docs
-      .map((doc) => doc.data() as GameData)
-      .filter((game) => game.isAI !== 1 && game.pos == position);
-
-    if (gameData.length) {
-      const avgPlayerStats = calculateAveragePlayerStats(
-        leagueData,
-        gameData,
-        playerData.name,
-        playerData.alias,
-        playerData.ftPerc,
-        playerData.rating,
-        playerData.gpSinceLastRating
-      );
-
-      // * Fix positional data for dropdown etc.
-      avgPlayerStats.positions = avgPlayerData.positions;
-
-      avgPlayerData = avgPlayerStats;
-    } else {
-      error('No games found for this player');
-      res.status(404).send('No games found for this player');
-      return;
+  try {
+    if (position) {
+      // * Get averages from player sub collection positions, where the doc id is the position number
+      const playerPositionData = await db
+        .collection('players')
+        .doc(playerID)
+        .collection('positions')
+        .doc(position)
+        .get()
+        .then((doc) => {
+          if (!doc.exists) {
+            throw new Error('No games found for this player position');
+          }
+          return doc.data() as PlayerData;
+        });
+      avgPlayerData = playerPositionData;
     }
+  } catch (err) {
+    error('No games found for this players position');
+    return res.status(404).send('No games found for this player position');
+  }
+
+  try {
+    if (lock) {
+      const playerLockData = await db
+        .collection('players')
+        .doc(playerID)
+        .collection('positions')
+        .doc('lock')
+        .get()
+        .then((doc) => {
+          if (!doc.exists) {
+            throw new Error('No games found for this players lock position');
+          }
+          return doc.data() as PlayerData;
+        });
+
+      if (playerLockData) {
+        avgPlayerData = playerLockData;
+      }
+    }
+  } catch (err) {
+    error('No games found for this players lock position');
+    return res.status(404).send('No games found for this players lock position');
   }
 
   const response = {
@@ -85,7 +102,7 @@ const fetchPlayerData = async (req: any, res: Response): Promise<void> => {
     leagueData
   };
 
-  res.send(response);
+  return res.send(response);
 };
 
 export default fetchPlayerData;

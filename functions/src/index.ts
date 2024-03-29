@@ -17,6 +17,7 @@ import fetchLastGames from '../api/fetchLastGames';
 import fetchLeagueAverages from '../api/fetchLeagueAverages';
 import compareToNBA from '../api/compareToNBA';
 import { recalculatePlayerAverageAPI, generateLeagueAverageAPI } from '../api/dashboardFunctions';
+import { generateAwards } from '../api/generateAwards';
 
 // * Cloud triggers
 import { upsertPlayerData } from '../api/triggers/games';
@@ -61,6 +62,7 @@ app.get('/ranking', fetchIndividualRanking);
 app.get('/fetchLastGames', fetchLastGames);
 app.get('/league', fetchLeagueAverages);
 app.get('/similarity', compareToNBA);
+app.get('/generateAwards', checkIfAdmin, generateAwards);
 
 exports.app = https.onRequest(app);
 

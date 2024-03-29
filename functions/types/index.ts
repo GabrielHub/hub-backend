@@ -4,3 +4,4 @@ export * from './game';
 export * from './league';
 export * from './nbaPlayer';
 export * from './rest';
+export * from './award';
