@@ -46,4 +46,5 @@ export interface GameData {
   aPER?: number;
   isAI: number;
   uploadId?: string;
+  oppPos: number;
 }

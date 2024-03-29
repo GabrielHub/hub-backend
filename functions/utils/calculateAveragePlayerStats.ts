@@ -10,7 +10,7 @@ import {
   roundToNearestThreshold
 } from './ratingUtils';
 import { getAmountToAverage } from './getAmountToAverage';
-import { GameData, LeagueData, PlayerData, PlayerPositions } from '../types';
+import { GameData, LeagueData, PlayerData } from '../types';
 
 /**
  * @description complex check for valid stats. ortg and drtg are sometimes 0, but those are not valid numbers
@@ -26,16 +26,6 @@ const isValidStatline = (stat: string, value: any): boolean => {
       !(stat === 'ortg' && value === 0) &&
       !(stat === 'drtg' && value === 0)
   );
-};
-
-const fixPositions = (positions: PlayerPositions): PlayerPositions => {
-  // * Sort positions by most games played, and remove the positions with 0 games played
-  const sortedPositions = Object.entries(positions).sort((a, b) => b[1] - a[1]);
-  const filteredPositions = sortedPositions.filter((pos) => pos[1] > 0);
-  return filteredPositions.reduce((acc, [key, value]) => {
-    acc[key] = value;
-    return acc;
-  }, {});
 };
 
 export const calculateAveragePlayerStats = (
@@ -124,15 +114,6 @@ export const calculateAveragePlayerStats = (
   // * DRtg can be NaN if the opponent took 0 fg, so skip over games where this is the case and do different division
   const statsWithNaN = {};
 
-  // * Games played per position
-  const positions: PlayerPositions = {
-    1: 0,
-    2: 0,
-    3: 0,
-    4: 0,
-    5: 0
-  };
-
   // * Sum the basic values (some % values are in here because they use team or opponent data)
   gameData.forEach((data) => {
     Object.keys(data).forEach((stat) => {
@@ -155,11 +136,6 @@ export const calculateAveragePlayerStats = (
         }
       }
     });
-
-    // * Add to positions
-    if (data.pos && positions[data.pos] !== undefined) {
-      positions[data.pos] += 1;
-    }
   });
 
   // * Properties to total and not average
@@ -262,9 +238,6 @@ export const calculateAveragePlayerStats = (
     }
   }
   playerData.gpSinceLastRating = gameData.length;
-
-  // * Fix positions
-  playerData.positions = fixPositions(positions);
 
   return playerData;
 };

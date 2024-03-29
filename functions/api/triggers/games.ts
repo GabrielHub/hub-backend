@@ -1,8 +1,9 @@
 import admin from 'firebase-admin';
 import { log, error } from 'firebase-functions/logger';
-import { calculateAveragePlayerStats } from '../../utils';
+import { calculateAveragePlayerStats, getPositions } from '../../utils';
 import { GameData, LeagueData, PlayerData } from '../../types';
 import { DEFAULT_FT_PERC } from '../../constants';
+import { WriteResult } from 'firebase-admin/firestore';
 
 const GAME_TRIGGER_STATUS_ENUMS = {
   IN_PROGRESS: 'in-progress',
@@ -97,6 +98,7 @@ export const upsertPlayerData = async (snapshot: any) => {
         .filter((game) => game.isAI !== 1);
 
       if (gameData.length) {
+        const promises: Promise<WriteResult>[] = [];
         const avgPlayerStats = calculateAveragePlayerStats(
           leagueData,
           gameData,
@@ -106,25 +108,73 @@ export const upsertPlayerData = async (snapshot: any) => {
           prevRating,
           gpSinceLastRating
         );
+        avgPlayerStats.positions = getPositions(gameData);
 
-        // * Add number of aPER games played
-        let aPERGames = 0;
-        gameData.forEach(({ aPER }) => {
-          if (aPER) {
-            aPERGames += 1;
-          }
+        // * For each position, calculate the average stats, then add to player sub-collection. the id of each subcollection is the position number
+        Object.keys(avgPlayerStats.positions).forEach(async (pos) => {
+          // * create a set of games by filtering game data by this position
+          const posGameData = gameData.filter((game) => game.pos === parseInt(pos, 10));
+          // * calculate the average stats for this position
+          const posPlayerStats = calculateAveragePlayerStats(
+            leagueData,
+            posGameData,
+            storedName,
+            alias,
+            ftPerc,
+            prevRating,
+            gpSinceLastRating
+          );
+          // * add the position to the player subcollection
+          promises.push(
+            db
+              .collection('players')
+              .doc(id)
+              .collection('positions')
+              .doc(pos)
+              .set({
+                ...posPlayerStats,
+                _updatedAt: admin.firestore.Timestamp.now()
+              })
+          );
         });
 
-        avgPlayerStats.aPERGamesPlayed = aPERGames;
+        // * Calculate the average stats for the player if they were the poaDefender (oppPos was 1)
+        const poaDefenderGameData = gameData.filter((game) => game.oppPos === 1);
+        const poaDefenderStats = calculateAveragePlayerStats(
+          leagueData,
+          poaDefenderGameData,
+          storedName,
+          alias,
+          ftPerc,
+          prevRating,
+          gpSinceLastRating
+        );
+        promises.push(
+          db
+            .collection('players')
+            .doc(id)
+            .collection('poaDefender')
+            .doc('lock')
+            .set({
+              ...poaDefenderStats,
+              _updatedAt: admin.firestore.Timestamp.now()
+            })
+        );
 
-        await db
-          .collection('players')
-          .doc(id)
-          .set({
-            ...avgPlayerStats,
-            _createdAt: admin.firestore.Timestamp.now(),
-            _updatedAt: admin.firestore.Timestamp.now()
-          });
+        // * Add the player to the player collection
+        promises.push(
+          db
+            .collection('players')
+            .doc(id)
+            .set({
+              ...avgPlayerStats,
+              _createdAt: admin.firestore.Timestamp.now(),
+              _updatedAt: admin.firestore.Timestamp.now()
+            })
+        );
+
+        log('creating/updating player from game trigger', storedName, 'aliases', alias);
+        await Promise.all(promises);
       }
     }
 
