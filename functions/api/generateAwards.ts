@@ -64,12 +64,7 @@ export const generateAwards = async (req: Request, res: Response) => {
     );
 
     // * MVP is the player with the highest PER with a minimum of 25 games played
-    const mvp = minGamesPlayerList.reduce((prev, current) => {
-      if (prev.aPER && current.aPER && current.gp >= 25) {
-        return prev.aPER > current.aPER ? prev : current;
-      }
-      return prev;
-    }, minGamesPlayerList[0]);
+    const mvp = minGamesPlayerList?.[0];
 
     // * DPOY is the player with the lowest drtg with a minimum of 25 games played
     const dpoy = minGamesPlayerList.reduce((prev, current) => {
@@ -197,7 +192,7 @@ export const generateAwards = async (req: Request, res: Response) => {
     const allNBAFirst = minFGAPlayerList.slice(0, 5);
 
     // * All NBA Second team is the top 5 players with the highest PER after allNBAFirst, min 25 games
-    const allNBASecond = minFGAPlayerList.slice(5, 10);
+    const allNBASecond = minFGAPlayerList.slice(5, 11);
 
     const awards: Award = {
       mvp: { id: mvp.id, name: mvp.name, value: mvp.aPER, positions: mvp.topPositions },
