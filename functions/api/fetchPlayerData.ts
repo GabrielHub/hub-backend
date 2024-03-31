@@ -17,7 +17,7 @@ const fetchPlayerData = async (req: any, res: Response): Promise<Response<any>> 
     return res.status(400).send('Invalid position parameter passed');
   }
 
-  if (lock && lock !== 1) {
+  if (lock && (typeof lock !== 'string' || lock !== '1')) {
     return res.status(400).send('Invalid lock parameter passed');
   }
 
