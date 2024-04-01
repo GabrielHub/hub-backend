@@ -52,7 +52,7 @@ const fetchPlayerData = async (req: any, res: Response): Promise<Response<any>> 
     });
 
   try {
-    if (position) {
+    if (position && !lock) {
       // * Get averages from player sub collection positions, where the doc id is the position number
       const playerPositionData = await db
         .collection('players')
@@ -78,7 +78,7 @@ const fetchPlayerData = async (req: any, res: Response): Promise<Response<any>> 
       const playerLockData = await db
         .collection('players')
         .doc(playerID)
-        .collection('positions')
+        .collection('poaDefender')
         .doc('lock')
         .get()
         .then((doc) => {
