@@ -240,6 +240,12 @@ export const calculateAveragePlayerStats = (
   }
   playerData.gpSinceLastRating = gameData.length;
 
+  // * Estimate possessions this player is responsible for
+  const estPoss = Math.round(
+    playerData.fga + playerData.tov + playerData.ast + playerData.fta * 0.44
+  );
+  playerData.estPoss = estPoss;
+
   return playerData;
 };
 

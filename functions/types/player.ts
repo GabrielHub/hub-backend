@@ -62,4 +62,5 @@ export interface PlayerData {
   ratingMovement: string;
   gpSinceLastRating: number;
   positions?: PlayerPositions;
+  estPoss?: number;
 }
