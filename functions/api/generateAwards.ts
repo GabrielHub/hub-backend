@@ -188,6 +188,17 @@ export const generateAwards = async (req: Request, res: Response) => {
       return prev;
     }, minFGAPlayerList[0]);
 
+    // * Best Passer is the player with the highest AST%/USG% - TOV%/USG%, min 25 games
+    const bestPlaymaker = minGamesPlayerList.reduce((prev, current) => {
+      if (prev.astPerc && current.astPerc && current.gp >= 25) {
+        const prevValue = prev.astPerc / prev.usageRate - prev.tovPerc / prev.usageRate;
+        const currentValue =
+          current.astPerc / current.usageRate - current.tovPerc / current.usageRate;
+        return prevValue > currentValue ? prev : current;
+      }
+      return prev;
+    }, minGamesPlayerList[0]);
+
     // * All NBA First team is the top 5 players with the highest PER, min 25 games
     const allNBAFirst = minGamesPlayerList.slice(0, 5);
 
@@ -263,6 +274,12 @@ export const generateAwards = async (req: Request, res: Response) => {
         name: bestIntimidator.name,
         value: `${bestIntimidator.oEFGPerc} ${bestIntimidator.oFGA}`,
         positions: bestIntimidator.topPositions
+      },
+      bestPasser: {
+        id: bestPlaymaker.id,
+        name: bestPlaymaker.name,
+        value: `${bestPlaymaker.ast} ${bestPlaymaker.tov} ${bestPlaymaker.usageRate}`,
+        positions: bestPlaymaker.topPositions
       },
       allNBAFirst: allNBAFirst.map((player) => ({
         id: player.id,

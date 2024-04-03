@@ -34,6 +34,8 @@ export interface Award {
   mostAttacked: AwardObject;
   /** Lowest OFG% weighted 50/50 with OFGA, min 300 OFGA */
   bestIntimidator: AwardObject;
+  /** Highest AST%/USG% - TOV%/USG%, min 25 games */
+  bestPasser: AwardObject;
   /** Top 5 highest PER, min 25 games */
   allNBAFirst: AwardObject[];
   /** Top 5 PER after allNBAFirst, min 25 games */
