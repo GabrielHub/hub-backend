@@ -293,10 +293,12 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     }
 
     // * Calculate advanced defensive stats
+    const opFTA = playerFreeThrowData[opponent.name]?.fta || 0;
     const { drtg, drebPerc, oFGA, oFGM, o3PA, o3PM } = calculateAdvancedDefensiveStats(
       formattedPlayer,
       opponent,
       opOREB,
+      opFTA,
       team
     );
 

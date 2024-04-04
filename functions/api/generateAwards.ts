@@ -98,17 +98,12 @@ export const generateAwards = async (req: Request, res: Response) => {
       return prev;
     }, min3PAPlayerList[0]);
 
-    // * Worst shooter is the player with the lowest 3P% weighted 80/20 with three point attempt rate, min 82 3PA
+    // * Worst shooter is the player with the lowest 3P%:3PaR ratio, min 82 3PA
     const worstShooter = min3PAPlayerList.reduce((prev, current) => {
-      if (
-        current.threePerc &&
-        prev.threePerc &&
-        current.threepAR &&
-        current.threepa * current.gp >= 82
-      ) {
-        const prevWeighted = prev.threePerc * 0.8 + prev.threepAR * 0.2;
-        const currentWeighted = current.threePerc * 0.8 + current.threepAR * 0.2;
-        return prevWeighted < currentWeighted ? prev : current;
+      if (prev.threePerc && current.threePerc && current.threepa * current.gp >= 82) {
+        const prevRatio = prev.threePerc / prev.threepAR;
+        const currentRatio = current.threePerc / current.threepAR;
+        return prevRatio < currentRatio ? prev : current;
       }
       return prev;
     }, min3PAPlayerList[0]);
@@ -118,75 +113,13 @@ export const generateAwards = async (req: Request, res: Response) => {
       return prev.gp > current.gp ? prev : current;
     }, minGamesPlayerList[0]);
 
-    // * Most used player is the player with the highest USG%, min 25 games
-    const mostUsed = minGamesPlayerList.reduce((prev, current) => {
-      if (prev.usageRate && current.usageRate && current.gp >= 25) {
-        return prev.usageRate > current.usageRate ? prev : current;
+    // * Ballhog award is the player with the lowest (AST%/USG%) value, min 25 games
+    const ballHog = minGamesPlayerList.reduce((prev, current) => {
+      if (prev.astPerc && current.astPerc && current.gp >= 25) {
+        return prev.astPerc / prev.usageRate < current.astPerc / current.usageRate ? prev : current;
       }
       return prev;
     }, minGamesPlayerList[0]);
-
-    // * Least used player is the player with the lowest USG%, min 25 games
-    const leastUsed = minGamesPlayerList.reduce((prev, current) => {
-      if (current.gp && current.gp >= 25) {
-        return prev.usageRate < current.usageRate ? prev : current;
-      }
-      return prev;
-    }, minGamesPlayerList[0]);
-
-    // * Most efficient player is the player with the highest EFG%, min 300 FGA
-    const mostEfficient = minFGAPlayerList.reduce((prev, current) => {
-      if (prev.efgPerc && current.efgPerc && current.fga * current.gp >= 300) {
-        return prev.efgPerc > current.efgPerc ? prev : current;
-      }
-      return prev;
-    }, minFGAPlayerList[0]);
-
-    // * Least efficient player is the player with the lowest EFG%, min 300 FGA
-    const leastEfficient = minFGAPlayerList.reduce((prev, current) => {
-      if (prev.efgPerc && current.efgPerc && current.fga * current.gp >= 300) {
-        return prev.efgPerc < current.efgPerc ? prev : current;
-      }
-      return prev;
-    }, minFGAPlayerList[0]);
-
-    // * Shot chucker is the player with the lowest EFG% weighted 50/50 with high FGA, min 300 FGA
-    const shotChucker = minFGAPlayerList.reduce((prev, current) => {
-      if (prev.efgPerc && current.efgPerc && current.fga * current.gp >= 300) {
-        const prevWeighted = prev.efgPerc * 0.5 + prev.fga * 0.5;
-        const currentWeighted = current.efgPerc * 0.5 + current.fga * 0.5;
-        return prevWeighted < currentWeighted ? prev : current;
-      }
-      return prev;
-    }, minFGAPlayerList[0]);
-
-    // * Fastbreak player is the player with the highest pace weighted 80/20 with FGA, min 25 games
-    const fastbreakPlayer = minGamesPlayerList.reduce((prev, current) => {
-      if (prev.gp && current.gp && current.gp >= 25) {
-        const prevWeighted = prev.pace * 0.8 + prev.fga * 0.2;
-        const currentWeighted = current.pace * 0.8 + current.fga * 0.2;
-        return prevWeighted > currentWeighted ? prev : current;
-      }
-      return prev;
-    }, minGamesPlayerList[0]);
-
-    // * Most attacked player is the player with the most OFGA, min 300 OFGA
-    const mostAttacked = minFGAPlayerList.reduce((prev, current) => {
-      if (prev.oFGA && current.oFGA && current.oFGA * current.gp >= 300) {
-        return prev.oFGA > current.oFGA ? prev : current;
-      }
-      return prev;
-    }, minFGAPlayerList[0]);
-
-    // * Best intimidator is the player with the lowest OFG% weighted 50/50 with OFGA, min 300 OFGA
-    const bestIntimidator = minFGAPlayerList.reduce((prev, current) => {
-      if (prev.oEFGPerc && current.oEFGPerc && current.oFGA && current.oFGA * current.gp >= 300) {
-        const prevWeighted = prev.oEFGPerc * 0.5 + prev.oFGA * 0.5;
-        const currentWeighted = current.oEFGPerc * 0.5 + current.oFGA * 0.5;
-        return prevWeighted < currentWeighted ? prev : current;
-      }
-      return prev;
-    }, minFGAPlayerList[0]);
 
     // * Best Passer is the player with the highest AST%/USG% - TOV%/USG%, min 25 games
     const bestPlaymaker = minGamesPlayerList.reduce((prev, current) => {
@@ -199,11 +132,58 @@ export const generateAwards = async (req: Request, res: Response) => {
       return prev;
     }, minGamesPlayerList[0]);
 
+    // * Most efficient player is the player with the highest (EFG% * astToRatio) value, min 300 FGA
+    const mostEfficient = minFGAPlayerList.reduce((prev, current) => {
+      if (prev.efgPerc && current.efgPerc && current.fga * current.gp >= 300) {
+        return prev.efgPerc * prev.astToRatio > current.efgPerc * current.astToRatio
+          ? prev
+          : current;
+      }
+      return prev;
+    }, minFGAPlayerList[0]);
+
+    // * Least efficient player is the player with the lowest EFG% * astToRatio, min 300 FGA
+    const leastEfficient = minFGAPlayerList.reduce((prev, current) => {
+      if (prev.efgPerc && current.efgPerc && current.fga * current.gp >= 300) {
+        return prev.efgPerc * prev.astToRatio < current.efgPerc * current.astToRatio
+          ? prev
+          : current;
+      }
+      return prev;
+    }, minFGAPlayerList[0]);
+
+    // * Shot chucker is the player with the lowest EFG%:USG% Ratio, min 300 FGA
+    const shotChucker = minFGAPlayerList.reduce((prev, current) => {
+      if (prev.efgPerc && current.efgPerc && current.fga * current.gp >= 300) {
+        return prev.efgPerc / prev.usageRate < current.efgPerc / current.usageRate ? prev : current;
+      }
+      return prev;
+    }, minFGAPlayerList[0]);
+
+    // * Fastbreak player is the player with the highest pace:USG% ratio, min 25 games
+    const fastbreakPlayer = minGamesPlayerList.reduce((prev, current) => {
+      if (prev.pace && current.pace && current.gp >= 25) {
+        return prev.pace / prev.usageRate < current.pace / current.usageRate ? prev : current;
+      }
+      return prev;
+    }, minGamesPlayerList[0]);
+
+    // * Best intimidator is the player with the lowest OFG%/(blk) ratio, min 300 OFGA
+    const bestIntimidator = minFGAPlayerList.reduce((prev, current) => {
+      if (prev.oEFGPerc && current.oEFGPerc && current.oFGA * current.gp >= 300) {
+        return prev.oEFGPerc / prev.blk < current.oEFGPerc / current.blk ? prev : current;
+      }
+      return prev;
+    }, minFGAPlayerList[0]);
+
     // * All NBA First team is the top 5 players with the highest PER, min 25 games
     const allNBAFirst = minGamesPlayerList.slice(0, 5);
 
     // * All NBA Second team is the top 5 players with the highest PER after allNBAFirst, min 25 games
     const allNBASecond = minGamesPlayerList.slice(5, 10);
+
+    // * All Defense First team is the top 5 players with the lowest drtg, min 25 games
+    const allDefenseFirst = minGamesPlayerList.sort((a, b) => a.drtg - b.drtg).slice(0, 5);
 
     const awards: Award = {
       mvp: { id: mvp.id, name: mvp.name, value: mvp.aPER, positions: mvp.topPositions },
@@ -227,28 +207,16 @@ export const generateAwards = async (req: Request, res: Response) => {
         value: mostActive?.gp || 0,
         positions: mostActive.topPositions
       },
-      mostUsed: {
-        id: mostUsed.id,
-        name: mostUsed.name,
-        value: mostUsed.usageRate,
-        positions: mostUsed.topPositions
-      },
-      leastUsed: {
-        id: leastUsed.id,
-        name: leastUsed.name,
-        value: leastUsed.usageRate,
-        positions: leastUsed.topPositions
-      },
       mostEfficient: {
         id: mostEfficient.id,
         name: mostEfficient.name,
-        value: mostEfficient?.efgPerc || 0,
+        value: `${mostEfficient.efgPerc} ${mostEfficient.astToRatio}`,
         positions: mostEfficient.topPositions
       },
       leastEfficient: {
         id: leastEfficient.id,
         name: leastEfficient.name,
-        value: leastEfficient?.efgPerc || 0,
+        value: `${leastEfficient.efgPerc} ${leastEfficient.astToRatio}`,
         positions: leastEfficient.topPositions
       },
       shotChucker: {
@@ -263,16 +231,10 @@ export const generateAwards = async (req: Request, res: Response) => {
         value: `${fastbreakPlayer.pace} ${fastbreakPlayer.fga}`,
         positions: fastbreakPlayer.topPositions
       },
-      mostAttacked: {
-        id: mostAttacked.id,
-        name: mostAttacked.name,
-        value: mostAttacked.oFGA,
-        positions: mostAttacked.topPositions
-      },
       bestIntimidator: {
         id: bestIntimidator.id,
         name: bestIntimidator.name,
-        value: `${bestIntimidator.oEFGPerc} ${bestIntimidator.oFGA}`,
+        value: `${bestIntimidator.oEFGPerc} ${bestIntimidator.oFGA} ${bestIntimidator.blk}`,
         positions: bestIntimidator.topPositions
       },
       bestPasser: {
@@ -281,16 +243,28 @@ export const generateAwards = async (req: Request, res: Response) => {
         value: `${bestPlaymaker.ast} ${bestPlaymaker.tov} ${bestPlaymaker.usageRate}`,
         positions: bestPlaymaker.topPositions
       },
+      ballHog: {
+        id: ballHog.id,
+        name: ballHog.name,
+        value: `${ballHog.astPerc} ${ballHog.usageRate}`,
+        positions: ballHog.topPositions
+      },
       allNBAFirst: allNBAFirst.map((player) => ({
         id: player.id,
         name: player.name,
-        value: Math.floor(player.rating),
+        value: player.rating,
         positions: player.topPositions
       })),
       allNBASecond: allNBASecond.map((player) => ({
         id: player.id,
         name: player.name,
-        value: Math.floor(player.rating),
+        value: player.rating,
+        positions: player.topPositions
+      })),
+      allDefensiveFirst: allDefenseFirst.map((player) => ({
+        id: player.id,
+        name: player.name,
+        value: player.rating,
         positions: player.topPositions
       }))
     };

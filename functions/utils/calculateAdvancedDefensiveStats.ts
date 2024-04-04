@@ -2,13 +2,11 @@ import { calculateTwoPointers } from './calculateTwoPointers';
 import { calculateFreeThrowsMade } from './calculateFreeThrows';
 import { PlayerData, RawPlayerData, TeamData } from '../types';
 
-// TODO We need to use this until we have more data (league average data)
-const DEFAULT_FT_PERC = 0.72;
-
 export const calculateAdvancedDefensiveStats = (
   player: PlayerData,
   opponent: RawPlayerData,
   opOREB: number,
+  opFTA: number,
   team: TeamData
 ) => {
   // * Calculating advanced defensive stats (we only calculate the advanced stats that require opponent or team numbers)
@@ -22,9 +20,11 @@ export const calculateAdvancedDefensiveStats = (
     opponent.threepm
   );
   // * We cannot get the FTA without knowing FT%, so just calculate FTM
-  const opFTM = calculateFreeThrowsMade(opponent.pts, opTwoPM, opponent.threepm) || 1;
-  const opFTA = Math.round(opFTM / DEFAULT_FT_PERC) || 1;
-  const opFTDivision = opFTA !== 0 ? opFTM / opFTA : 1;
+  const opFTM = Math.min(
+    calculateFreeThrowsMade(opponent.pts, opTwoPM, opponent.threepm) ?? 0,
+    opFTA
+  );
+  const opFTDivision = opFTA !== 0 ? opFTM / opFTA : 0;
   const opMin = 20;
 
   const dorPerc = opOREB / (opOREB + team.dreb);
