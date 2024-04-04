@@ -280,7 +280,7 @@ export const generateAwards = async (req: Request, res: Response) => {
       allDefensiveFirst: allDefenseFirst.map((player) => ({
         id: player.id,
         name: player.name,
-        value: player.rating,
+        value: player.drtg,
         positions: player.topPositions
       }))
     };
