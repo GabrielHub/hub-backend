@@ -176,6 +176,16 @@ export const generateAwards = async (req: Request, res: Response) => {
       return prev;
     }, minFGAPlayerList[0]);
 
+    // * Best TwoWay is the player with the highest ratio of (ortg - drtg)/USG%, min 25 games
+    const bestTwoWay = minGamesPlayerList.reduce((prev, current) => {
+      if (prev.ortg && prev.drtg && current.ortg && current.drtg && current.gp >= 25) {
+        const prevValue = (prev.ortg - prev.drtg) / prev.usageRate;
+        const currentValue = (current.ortg - current.drtg) / current.usageRate;
+        return prevValue > currentValue ? prev : current;
+      }
+      return prev;
+    }, minGamesPlayerList[0]);
+
     // * All NBA First team is the top 5 players with the highest PER, min 25 games
     const allNBAFirst = minGamesPlayerList.slice(0, 5);
 
@@ -248,6 +258,12 @@ export const generateAwards = async (req: Request, res: Response) => {
         name: ballHog.name,
         value: `${ballHog.astPerc} ${ballHog.usageRate}`,
         positions: ballHog.topPositions
+      },
+      bestTwoWay: {
+        id: bestTwoWay.id,
+        name: bestTwoWay.name,
+        value: `${bestTwoWay.ortg} ${bestTwoWay.drtg} ${bestTwoWay.usageRate}`,
+        positions: bestTwoWay.topPositions
       },
       allNBAFirst: allNBAFirst.map((player) => ({
         id: player.id,
