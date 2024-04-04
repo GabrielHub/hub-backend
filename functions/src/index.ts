@@ -2,6 +2,7 @@ import { https, firestore, pubsub, auth } from 'firebase-functions';
 import admin from 'firebase-admin';
 import cors from 'cors';
 import express from 'express';
+import expressCache from 'cache-express';
 import { rateLimit } from 'express-rate-limit';
 
 import { corsOptionsDelegate } from '../utils/corsOptionsDelegate';
@@ -20,6 +21,7 @@ import { recalculatePlayerAverageAPI, generateLeagueAverageAPI } from '../api/da
 import { generateAwards } from '../api/generateAwards';
 import fetchAwards from '../api/fetchAwards';
 import { fetchPlayerDataByPosition } from '../api/fetchPlayerDataByPosition';
+import fetchLastGame from '../api/fetchLastUploadedGame';
 
 // * Cloud triggers
 import { upsertPlayerData } from '../api/triggers/games';
@@ -35,6 +37,10 @@ const limiter = rateLimit({
   max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false // Disable the `X-RateLimit-*` headers
+});
+
+const cache = expressCache({
+  timeOut: 1000 * 60 * 60 * 24
 });
 
 admin.initializeApp();
@@ -62,6 +68,7 @@ app.get(
 app.get('/lookupPlayer', fetchPlayerData);
 app.get('/ranking', fetchIndividualRanking);
 app.get('/fetchLastGames', fetchLastGames);
+app.get('/fetchLastUploadedGame', cache, fetchLastGame);
 app.get('/league', fetchLeagueAverages);
 app.get('/similarity', compareToNBA);
 app.get('/generateAwards', checkIfAdmin, generateAwards);

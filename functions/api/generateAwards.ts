@@ -186,6 +186,16 @@ export const generateAwards = async (req: Request, res: Response) => {
       return prev;
     }, minGamesPlayerList[0]);
 
+    // * Turnover Machine is the player with the highest TOV% weighted 50% with TOV, min 25 games
+    const turnoverMachine = minGamesPlayerList.reduce((prev, current) => {
+      if (prev.tovPerc && current.tovPerc && current.gp >= 25) {
+        const prevWeighted = prev.tovPerc * 0.5 + prev.tov;
+        const currentWeighted = current.tovPerc * 0.5 + current.tov;
+        return prevWeighted > currentWeighted ? prev : current;
+      }
+      return prev;
+    }, minGamesPlayerList[0]);
+
     // * All NBA First team is the top 5 players with the highest PER, min 25 games
     const allNBAFirst = minGamesPlayerList.slice(0, 5);
 
@@ -271,6 +281,12 @@ export const generateAwards = async (req: Request, res: Response) => {
         value: player.rating,
         positions: player.topPositions
       })),
+      turnoverMachine: {
+        id: turnoverMachine.id,
+        name: turnoverMachine.name,
+        value: `${turnoverMachine.tovPerc} ${turnoverMachine.tov}`,
+        positions: turnoverMachine.topPositions
+      },
       allNBASecond: allNBASecond.map((player) => ({
         id: player.id,
         name: player.name,
