@@ -32,6 +32,8 @@ export interface Award {
   bestIntimidator: AwardObject;
   /** Highest AST%/USG% - TOV%/USG%, min 25 games */
   bestPasser: AwardObject;
+  /** Highest ratio of (ortg - drtg)/USG%, min 25 games */
+  bestTwoWay: AwardObject;
   /** Top 5 highest PER, min 25 games */
   allNBAFirst: AwardObject[];
   /** Top 5 PER after allNBAFirst, min 25 games */
