@@ -71,7 +71,7 @@ app.get('/fetchLastGames', fetchLastGames);
 app.get('/fetchLastUploadedGame', cache, fetchLastGame);
 app.get('/league', fetchLeagueAverages);
 app.get('/similarity', compareToNBA);
-app.get('/generateAwards', checkIfAdmin, generateAwards);
+app.get('/generateAwards', checkIfAdmin, cache, generateAwards);
 app.get('/fetchAwards', fetchAwards);
 app.get('/fetchPlayerDataByPosition', fetchPlayerDataByPosition);
 
