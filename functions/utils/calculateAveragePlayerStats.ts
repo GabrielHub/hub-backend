@@ -247,9 +247,11 @@ export const calculateAveragePlayerStats = (
   );
   playerData.estPoss = estPoss;
 
-  const { bpm, eBPM } = calculateBPM(playerData, leagueData);
+  const { bpm, eBPM, bDefense, bOffense } = calculateBPM(playerData, leagueData);
   playerData.bpm = bpm;
   playerData.eBPM = eBPM;
+  playerData.bOffense = bOffense;
+  playerData.bDefense = bDefense;
 
   return playerData;
 };
