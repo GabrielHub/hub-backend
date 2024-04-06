@@ -247,11 +247,12 @@ export const calculateAveragePlayerStats = (
   );
   playerData.estPoss = estPoss;
 
-  const { bpm, eBPM, bDefense, bOffense } = calculateBPM(playerData, leagueData);
+  const { bpm, eBPM, estPointsPer100, stopsPer100, pProd } = calculateBPM(playerData, leagueData);
   playerData.bpm = bpm;
   playerData.eBPM = eBPM;
-  playerData.bOffense = bOffense;
-  playerData.bDefense = bDefense;
+  playerData.estPointsPer100 = estPointsPer100;
+  playerData.stopsPer100 = stopsPer100;
+  playerData.pProd = pProd;
 
   return playerData;
 };

@@ -65,6 +65,7 @@ export interface PlayerData {
   estPoss?: number;
   eBPM?: number;
   bpm?: number;
-  bOffense?: number;
-  bDefense?: number;
+  estPointsPer100?: number;
+  stopsPer100?: number;
+  pProd?: number;
 }
