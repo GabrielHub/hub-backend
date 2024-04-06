@@ -11,3 +11,4 @@ export * from './getAmountToAverage';
 export * from './getExpectedORebounds';
 export * from './roundForReadable';
 export * from './calculatePositions';
+export * from './calculateBPM';

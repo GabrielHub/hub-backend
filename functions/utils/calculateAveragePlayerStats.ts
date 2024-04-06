@@ -9,6 +9,7 @@ import {
   ratingThresholds,
   roundToNearestThreshold
 } from './ratingUtils';
+import { calculateBPM } from './calculateBPM';
 import { getAmountToAverage } from './getAmountToAverage';
 import { GameData, LeagueData, PlayerData } from '../types';
 
@@ -245,6 +246,10 @@ export const calculateAveragePlayerStats = (
     playerData.fga + playerData.tov + playerData.ast + playerData.fta * 0.44
   );
   playerData.estPoss = estPoss;
+
+  const { bpm, eBPM } = calculateBPM(playerData, leagueData);
+  playerData.bpm = bpm;
+  playerData.eBPM = eBPM;
 
   return playerData;
 };

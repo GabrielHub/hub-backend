@@ -23,5 +23,12 @@ export interface LeagueData {
   threepm: number;
   tov: number;
   treb: number;
-  usageRate?: number;
+  usageRate: number;
+  threepPerc: number;
+  eBPM?: number;
+  astPerc: number;
+  oFGA: number;
+  oFGM: number;
+  o3PA: number;
+  o3PM: number;
 }

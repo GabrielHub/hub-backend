@@ -27,7 +27,14 @@ const STATS_TO_ADD = [
   'usageRate',
   'tovPerc',
   'gp',
-  'aPER'
+  'aPER',
+  'astPerc',
+  'oFGA',
+  'oFGM',
+  'o3PA',
+  'o3PM',
+  'eBPM',
+  'bpm'
 ];
 
 const generateLeagueAverage = async (): Promise<null> => {
@@ -112,7 +119,7 @@ const generateLeagueAverage = async (): Promise<null> => {
       ...averageGameStats,
       players: playerList.length,
       // * Store each league average as historical data
-      createdAt: dayjs().format('YYYY-MM-DD')
+      createdAt: dayjs().format('YYYY-MM-DD HH:mm:ss')
     });
 
     log('league average updated', averageGameStats);
