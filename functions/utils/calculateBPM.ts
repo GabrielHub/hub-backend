@@ -14,13 +14,18 @@ const calculateOffensiveRating = (
 
   // * Estimate Points Produced from FG and Ast
   const pointsFromAssists = data.ast * averagePointsPerLeagueFG;
-  const pointsProduced = averagePointsPerFG + pointsFromAssists;
+  const pointsProduced = data.pts + pointsFromAssists;
   const adjustedPP = pointsProduced * (data.usageRate / leagueUsageRate);
 
   // * Estimate points lost from negative possessions (missed shots and turnovers)
   const pointsLostFromMissedShots = (data.fga - data.fgm) * averagePointsPerFG;
 
-  const pointsLostFromTurnovers = data.tov * ((averagePointsPerFG + averagePointsPerLeagueFG) / 2);
+  // * Percentage of possessions that result in an assist
+  const percAssist = data.ast / (data.ast + data.fga + data.ftm * 0.44);
+  // * Percentage of possessions that result in a field goal attempt
+  const percFGA = data.fga / (data.ast + data.fga + data.ftm * 0.44);
+  const pointsLostFromTurnovers =
+    data.tov * ((averagePointsPerFG * percFGA + averagePointsPerLeagueFG * percAssist) / 2);
   const pointsLostFromNegativePoss = pointsLostFromMissedShots + pointsLostFromTurnovers;
   const adjustedPointsLost = pointsLostFromNegativePoss * (data.usageRate / leagueUsageRate);
 
