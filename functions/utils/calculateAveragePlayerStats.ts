@@ -175,7 +175,7 @@ export const calculateAveragePlayerStats = (
   playerData.tsPerc =
     round(100 * (playerData.pts / (2 * (playerData.fga + 0.44 * playerData.fta))), 1) || null;
   playerData.efgPerc =
-    round(100 * ((playerData.fgm + 0.5 ** playerData.threepm) / playerData.fga), 1) || null;
+    round(100 * ((playerData.fgm + 0.5 * playerData.threepm) / playerData.fga), 1) || null;
   playerData.threepAR = round(100 * (playerData.threepa / playerData.fga), 1);
 
   playerData.astToRatio = round(playerData.ast / playerData.tov, 1);

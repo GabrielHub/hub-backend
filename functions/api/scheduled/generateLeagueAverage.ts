@@ -34,7 +34,10 @@ const STATS_TO_ADD = [
   'o3PA',
   'o3PM',
   'eBPM',
-  'bpm'
+  'bpm',
+  'estPointsPer100',
+  'stopsPer100',
+  'pProd'
 ];
 
 const generateLeagueAverage = async (): Promise<null> => {
@@ -100,10 +103,18 @@ const generateLeagueAverage = async (): Promise<null> => {
 
     // Add calculations for FG%, 3PT%, and EFG%
     averageGameStats['fgPerc'] = (averageGameStats['fgm'] / averageGameStats['fga']) * 100;
-    averageGameStats['threepPerc'] =
+    averageGameStats['threePerc'] =
       (averageGameStats['threepm'] / averageGameStats['threepa']) * 100;
     averageGameStats['efgPerc'] =
       ((averageGameStats['fgm'] + 0.5 * averageGameStats['threepm']) / averageGameStats['fga']) *
+      100;
+    averageGameStats['tsPerc'] =
+      (averageGameStats['pts'] / (2 * (averageGameStats['fga'] + 0.44 * averageGameStats['fta']))) *
+        100 || 0;
+    const averageOFGPerc = (averageGameStats['oFGM'] / averageGameStats['oFGA']) * 100;
+    const averageO3PPerc = (averageGameStats['o3PM'] / averageGameStats['o3PA']) * 100;
+    const averageOeFGPerc =
+      ((averageGameStats['oFGM'] + 0.5 * averageGameStats['o3PM']) / averageGameStats['oFGA']) *
       100;
 
     // Add calculations for AST/TO ratio
@@ -115,9 +126,16 @@ const generateLeagueAverage = async (): Promise<null> => {
     // * Average PER is always 15
     averageGameStats.PER = 15;
 
+    // * Average BPM is always 0
+    const averageBPM = 0;
+
     await db.collection('league').add({
       ...averageGameStats,
       players: playerList.length,
+      bpm: averageBPM,
+      oFGPerc: averageOFGPerc,
+      o3PPerc: averageO3PPerc,
+      oEFGPerc: averageOeFGPerc,
       // * Store each league average as historical data
       createdAt: dayjs().format('YYYY-MM-DD HH:mm:ss')
     });

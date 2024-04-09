@@ -31,7 +31,7 @@ const calculateOffensiveRating = (
 
   const expectedPoints = adjustedPP - adjustedPointsLost;
   const adjustedOffensiveRating = (expectedPoints / data.pace) * 100;
-  return { adjustedOffensiveRating, adjustedPP };
+  return { adjustedOffensiveRating, adjustedPP: pointsProduced };
 };
 
 const calculateDefensiveRating = (data: PlayerData, leagueUsageRate: number): number => {
