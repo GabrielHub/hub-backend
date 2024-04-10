@@ -12,6 +12,12 @@ import {
 import { calculateBPM } from './calculateBPM';
 import { getAmountToAverage } from './getAmountToAverage';
 import { GameData, LeagueData, PlayerData } from '../types';
+import {
+  formatPossibleTeammateGrade,
+  isValidTeammateGrade,
+  mapTeammateGradeToValue,
+  mapTeammateValueToGrade
+} from './teammateGrades';
 
 /**
  * @description complex check for valid stats. ortg and drtg are sometimes 0, but those are not valid numbers
@@ -247,12 +253,27 @@ export const calculateAveragePlayerStats = (
   );
   playerData.estPoss = estPoss;
 
+  // * Convert teammate grades to a value, then average them, then convert back to a string.
+  let teammateGradeValue = 0;
+  let teammateGradeCount = 0;
+  gameData.forEach((data) => {
+    if (isValidTeammateGrade(data?.grd)) {
+      teammateGradeValue += mapTeammateGradeToValue(formatPossibleTeammateGrade(data.grd));
+      teammateGradeCount += 1;
+    }
+  });
+
+  const grd = teammateGradeCount
+    ? mapTeammateValueToGrade(teammateGradeValue / teammateGradeCount)
+    : 'N/A';
+
   const { bpm, eBPM, estPointsPer100, stopsPer100, pProd } = calculateBPM(playerData, leagueData);
   playerData.bpm = bpm;
   playerData.eBPM = eBPM;
   playerData.estPointsPer100 = estPointsPer100;
   playerData.stopsPer100 = stopsPer100;
   playerData.pProd = pProd;
+  playerData.grd = grd;
 
   return playerData;
 };
