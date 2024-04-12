@@ -53,18 +53,8 @@ app.use(limiter);
 app.post('/upload', checkIfAdmin, uploadStats);
 app.get('/testFunctions', checkIfAdmin, testFirebaseStuff);
 app.post('/queryTableData', fetchForTable);
-app.get(
-  '/recalculatePlayerAverages',
-
-  checkIfAdmin,
-  recalculatePlayerAverageAPI
-);
-app.get(
-  '/generateLeagueAverage',
-
-  checkIfAdmin,
-  generateLeagueAverageAPI
-);
+app.get('/recalculatePlayerAverages', checkIfAdmin, recalculatePlayerAverageAPI);
+app.get('/generateLeagueAverage', checkIfAdmin, generateLeagueAverageAPI);
 app.get('/lookupPlayer', fetchPlayerData);
 app.get('/ranking', fetchIndividualRanking);
 app.get('/fetchLastGames', fetchLastGames);

@@ -152,10 +152,10 @@ export const generateAwards = async (req: Request, res: Response) => {
       return prev;
     }, minFGAPlayerList[0]);
 
-    // * Shot chucker is the player with the lowest EFG%:USG% Ratio, min 300 FGA
+    // * Shot chucker is the player with the lowest EFG, min 300 FGA and 10 FGA per game
     const shotChucker = minFGAPlayerList.reduce((prev, current) => {
-      if (prev.efgPerc && current.efgPerc && current.fga * current.gp >= 300) {
-        return prev.efgPerc / prev.usageRate < current.efgPerc / current.usageRate ? prev : current;
+      if (prev.efgPerc && current.efgPerc && current.fga * current.gp >= 300 && current.fga > 9) {
+        return prev.efgPerc < current.efgPerc ? prev : current;
       }
       return prev;
     }, minFGAPlayerList[0]);

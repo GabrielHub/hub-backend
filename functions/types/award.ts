@@ -24,7 +24,7 @@ export interface Award {
   mostEfficient: AwardObject;
   /** Lowest EFG% * AST/TOV value, min 300 FGA */
   leastEfficient: AwardObject;
-  /** Lowest EFG%:USG% Ratio, min 300 FGA */
+  /** Lowest EFG%, min 300 FGA and 10 FGA per game */
   shotChucker: AwardObject;
   /** Highest pace:USG% ratio, min 25 games */
   fastbreakPlayer: AwardObject;
