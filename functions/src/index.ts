@@ -22,6 +22,7 @@ import { generateAwards } from '../api/generateAwards';
 import fetchAwards from '../api/fetchAwards';
 import { fetchPlayerDataByPosition } from '../api/fetchPlayerDataByPosition';
 import fetchLastGame from '../api/fetchLastUploadedGame';
+import { fetchArchive } from '../api/fetchArchive';
 
 // * Cloud triggers
 import { upsertPlayerData } from '../api/triggers/games';
@@ -33,8 +34,8 @@ import generateLeagueAverage from '../api/scheduled/generateLeagueAverage';
 import { recalculatePlayerAverages } from '../api/scheduled/recalculatePlayerAverages';
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  windowMs: 1000 * 60 * 15, // 15 minutes
+  max: 200, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false // Disable the `X-RateLimit-*` headers
 });
@@ -64,6 +65,7 @@ app.get('/similarity', compareToNBA);
 app.get('/generateAwards', checkIfAdmin, generateAwards);
 app.get('/fetchAwards', cache, fetchAwards);
 app.get('/fetchPlayerDataByPosition', fetchPlayerDataByPosition);
+app.get('/fetchArchive', cache, fetchArchive);
 
 exports.app = https.onRequest(app);
 
