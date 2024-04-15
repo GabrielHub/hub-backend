@@ -1,16 +1,6 @@
 import { round } from 'lodash';
-import {
-  movedDown,
-  movedDownExtra,
-  movedUp,
-  movedUpExtra,
-  calculateRating,
-  mapRatingToString,
-  ratingThresholds,
-  roundToNearestThreshold
-} from './ratingUtils';
+import { calculatePlayerRating } from './ratingUtils';
 import { calculateBPM } from './calculateBPM';
-import { getAmountToAverage } from './getAmountToAverage';
 import { GameData, LeagueData, PlayerData } from '../types';
 import {
   formatPossibleTeammateGrade,
@@ -25,10 +15,11 @@ import {
  * @param {*} value
  * @return {boolean}
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const isValidStatline = (stat: string, value: any): boolean => {
+const isValidStatline = (stat: string, value: string | number | undefined | null): boolean => {
   return Boolean(
-    typeof value !== 'string' &&
+    value !== undefined &&
+      value !== null &&
+      typeof value !== 'string' &&
       !Number.isNaN(value) &&
       !(stat === 'ortg' && value === 0) &&
       !(stat === 'drtg' && value === 0)
@@ -40,7 +31,7 @@ export const calculateAveragePlayerStats = (
   gameData: GameData[],
   name: string,
   alias: string[] = [],
-  ftPerc = 50,
+  ftPerc: number,
   prevRating: number,
   gpSinceLastRating: number
 ) => {
@@ -56,8 +47,12 @@ export const calculateAveragePlayerStats = (
     'gpSinceLastRating',
     'isAI',
     'positions',
-    'uploadId'
+    'uploadId',
+    '_createdAt',
+    '_updatedAt',
+    'id'
   ];
+
   // * Initialize player so we can add values before dividing at the end
   const playerData: PlayerData = {
     name,
@@ -120,27 +115,22 @@ export const calculateAveragePlayerStats = (
   };
 
   // * DRtg can be NaN if the opponent took 0 fg, so skip over games where this is the case and do different division
-  const statsWithNaN = {};
+  const statTotalCount = {};
 
   // * Sum the basic values (some % values are in here because they use team or opponent data)
   gameData.forEach((data) => {
     Object.keys(data).forEach((stat) => {
-      if (
-        Object.prototype.hasOwnProperty.call(playerData, stat) &&
-        !propertiesToSkip.includes(stat)
-      ) {
+      if (!propertiesToSkip.includes(stat) && playerData?.[stat] !== undefined) {
+        // * Initialize statTotalCount for this stat
+        if (!statTotalCount?.[stat]) {
+          statTotalCount[stat] = 0;
+        }
+
         // * check if number is NaN (skip invalid data from bad data processing)
-        if (isValidStatline(stat, data[stat])) {
+        if (isValidStatline(stat, data?.[stat])) {
           // * Normal logic for stats that have values
           playerData[stat] += data[stat];
-        } else if (Object.prototype.hasOwnProperty.call(statsWithNaN, stat)) {
-          // * Update it with one less games to count for the averages
-          statsWithNaN[stat] -= 1;
-        } else {
-          // * Stat may not exist in all games
-          const amountToDivideBy = getAmountToAverage(gameData, stat);
-          // * Add this stat to start counting games not including NaN games, minus 1 for the current time we're counting
-          statsWithNaN[stat] = amountToDivideBy - 1;
+          statTotalCount[stat] += 1;
         }
       }
     });
@@ -152,24 +142,9 @@ export const calculateAveragePlayerStats = (
   // * Average values by number of games and round them
   Object.keys(playerData).forEach((stat) => {
     if (!propertiesToSkip.includes(stat) && !propertiesToTotal.includes(stat)) {
-      // ? Rounding here saves a loop but also makes the Perc calculations below less precise...
-
       // * Check if stat is normal (never had a NaN value)
-      let divideFactor = 0;
-      if (Object.prototype.hasOwnProperty.call(statsWithNaN, stat) && statsWithNaN[stat] > 0) {
-        // * if there aren't enough games, avoid dividing by 0 or a - number
-        divideFactor = statsWithNaN[stat];
-      } else {
-        // * Should usually be the length, but could possibly not exist
-        // * Stats may not exist if they were added after data was being generated (PER, pace, pProd)
-        divideFactor = getAmountToAverage(gameData, stat);
-      }
-      playerData[stat] = round(playerData[stat] / divideFactor, 1);
-
-      // * do not store bad information
-      if (Number.isNaN(playerData[stat])) {
-        playerData[stat] = null;
-      }
+      const divideFactor = statTotalCount[stat] || gameData.length;
+      playerData[stat] = playerData[stat] / divideFactor;
     }
   });
 
@@ -192,60 +167,24 @@ export const calculateAveragePlayerStats = (
   playerData.oEFGPerc =
     round(100 * ((playerData.oFGM + 0.5 ** playerData.o3PM) / playerData.oFGA), 1) || null;
 
-  // * Calculate offensive and defensive rankings using weights between ortg/drtg and usage/oFGA
-
-  /*
-    For instance, using the 2020-21 NBA season data, the league average usage rate and offensive rating were 20.3% and 110.7, respectively, with standard deviations of 5.8% and 7.2. Using these values, we can calculate the weights as follows:
-    Weight of usage rate = 5.8 / (5.8 + 7.2) = 0.446
-    Weight of offensive rating = 7.2 / (5.8 + 7.2) = 0.554
-  */
-  const weightUSG = 0.446;
-  const weightORTG = 0.554;
-  playerData.offensiveRanking = playerData.ortg * weightORTG + playerData.usageRate * weightUSG;
-
-  /*
-    The league averages for drtg and oppFGA for the most recent NBA season. For example, in the 2020-21 NBA season, the league average drtg was 111.8 and the league average oppFGA was 89.5. You can use these values to calculate the weights as follows:
-    Weight of drtg = 89.5 / (111.8 + 89.5) = 0.444
-    Weight of oppFGA = 111.8 / (111.8 + 89.5) = 0.556
-  */
-  const weightOFGA = 0.556;
-  const weightDRTG = 0.444;
-  playerData.defensiveRanking = playerData.drtg * weightDRTG - playerData.oFGA * weightOFGA;
-
   // * Recalculate PER here and readjust for new pace
   const paceAdjustment = leagueData.pace / playerData.pace;
-  playerData.aPER = playerData.uPER ? paceAdjustment * playerData.uPER : playerData.aPER;
+  playerData.aPER = paceAdjustment * playerData.uPER;
   playerData.PER = playerData.aPER * (leagueData.PER / (leagueData.aPER || playerData.aPER));
 
   // * Calculate rating
-  const shouldUpdateRating = gpSinceLastRating !== gameData.length;
-  const newRating = calculateRating(playerData.PER);
-  playerData.rating = newRating;
-  playerData.ratingString = mapRatingToString(playerData.rating);
-  playerData.ratingMovement = '';
-  if (shouldUpdateRating && prevRating && newRating) {
-    // if the rating diff crosses a threshold, note that the rating has moved up or down. if the rating is the same, remove the note. IF the rating crosses two thresholds, note that the rating has moved up or down twice
-    const currentRatingThreshold = ratingThresholds().find(
-      (threshold) => roundToNearestThreshold(prevRating) < threshold
-    );
-    const newRatingThreshold = ratingThresholds().find(
-      (threshold) => roundToNearestThreshold(newRating) < threshold
-    );
-    if (currentRatingThreshold && newRatingThreshold) {
-      if (currentRatingThreshold !== newRatingThreshold) {
-        if (newRating > prevRating) {
-          playerData.ratingMovement =
-            newRatingThreshold - currentRatingThreshold > 1 ? movedUpExtra : movedUp;
-        } else if (newRating < prevRating) {
-          playerData.ratingMovement =
-            newRatingThreshold - currentRatingThreshold > 1 ? movedDownExtra : movedDown;
-        }
-      } else {
-        playerData.ratingMovement = '';
-      }
-    }
-  }
-  playerData.gpSinceLastRating = gameData.length;
+  const { rating, ratingString, ratingMovement, newGPSinceLastRating } = calculatePlayerRating(
+    gameData,
+    prevRating,
+    gpSinceLastRating,
+    leagueData.PER,
+    leagueData.aPER,
+    paceAdjustment
+  );
+  playerData.rating = rating;
+  playerData.ratingString = ratingString;
+  playerData.ratingMovement = ratingMovement;
+  playerData.gpSinceLastRating = newGPSinceLastRating;
 
   // * Estimate possessions this player is responsible for
   const estPoss = Math.round(

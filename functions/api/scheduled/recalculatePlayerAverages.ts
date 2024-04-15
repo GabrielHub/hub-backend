@@ -70,52 +70,56 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
         Object.keys(avgPlayerStats.positions).forEach(async (pos) => {
           // * create a set of games by filtering game data by this position
           const posGameData = gameData.filter((game) => game.pos === parseInt(pos, 10));
-          // * calculate the average stats for this position
-          const posPlayerStats = calculateAveragePlayerStats(
+          if (posGameData.length) {
+            // * calculate the average stats for this position
+            const posPlayerStats = calculateAveragePlayerStats(
+              leagueData,
+              posGameData,
+              storedName,
+              alias,
+              ftPerc,
+              prevRating,
+              gpSinceLastRating
+            );
+            // * add the position to the player subcollection
+            promises.push(
+              db
+                .collection('players')
+                .doc(id)
+                .collection('positions')
+                .doc(pos)
+                .set({
+                  ...posPlayerStats,
+                  _updatedAt: admin.firestore.Timestamp.now()
+                })
+            );
+          }
+        });
+
+        // * Calculate the average stats for the player if they were the poaDefender (oppPos was 1)
+        const poaDefenderGameData = gameData.filter((game) => game.oppPos === 1);
+        if (poaDefenderGameData.length) {
+          const poaDefenderStats = calculateAveragePlayerStats(
             leagueData,
-            posGameData,
+            poaDefenderGameData,
             storedName,
             alias,
             ftPerc,
             prevRating,
             gpSinceLastRating
           );
-          // * add the position to the player subcollection
           promises.push(
             db
               .collection('players')
               .doc(id)
-              .collection('positions')
-              .doc(pos)
+              .collection('poaDefender')
+              .doc('lock')
               .set({
-                ...posPlayerStats,
+                ...poaDefenderStats,
                 _updatedAt: admin.firestore.Timestamp.now()
               })
           );
-        });
-
-        // * Calculate the average stats for the player if they were the poaDefender (oppPos was 1)
-        const poaDefenderGameData = gameData.filter((game) => game.oppPos === 1);
-        const poaDefenderStats = calculateAveragePlayerStats(
-          leagueData,
-          poaDefenderGameData,
-          storedName,
-          alias,
-          ftPerc,
-          prevRating,
-          gpSinceLastRating
-        );
-        promises.push(
-          db
-            .collection('players')
-            .doc(id)
-            .collection('poaDefender')
-            .doc('lock')
-            .set({
-              ...poaDefenderStats,
-              _updatedAt: admin.firestore.Timestamp.now()
-            })
-        );
+        }
 
         log('updating player', storedName, 'aliases', alias);
         promises.push(

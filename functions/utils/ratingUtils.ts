@@ -1,7 +1,9 @@
-export const movedUp = '(↑)';
-export const movedDown = '(↓)';
-export const movedUpExtra = '(↑↑)';
-export const movedDownExtra = '(↓↓)';
+import { GameData } from '../types';
+
+const movedUp = '(↑)';
+const movedDown = '(↓)';
+const movedUpExtra = '(↑↑)';
+const movedDownExtra = '(↓↓)';
 
 const RATING_CONFIG = {
   GLeague: 3,
@@ -14,7 +16,7 @@ const RATING_CONFIG = {
   Superstar: 10
 };
 
-export const mapRatingToString = (value: number): string => {
+const mapRatingToString = (value: number): string => {
   const rating = Object.keys(RATING_CONFIG)
     .sort((a, b) => RATING_CONFIG[a] - RATING_CONFIG[b])
     .find((key) => value <= RATING_CONFIG[key]);
@@ -22,9 +24,9 @@ export const mapRatingToString = (value: number): string => {
   return rating || 'MVP';
 };
 
-export const ratingThresholds = () => Object.values(RATING_CONFIG);
+const ratingThresholds = () => Object.values(RATING_CONFIG);
 
-export const calculateRating = (PER: number): number => {
+const calculateRating = (PER: number): number => {
   // Take a PER from 0 to 35+ and convert it to a 0-10 scale. a PER of 15 is always 5
   let rating = 10;
   if (PER <= 0) {
@@ -40,7 +42,7 @@ export const calculateRating = (PER: number): number => {
   return rating;
 };
 
-export const roundToNearestThreshold = (rating: number): number => {
+const roundToNearestThreshold = (rating: number): number => {
   const ratingThresholdList = ratingThresholds();
   let closest = ratingThresholdList[0];
   for (let i = 1; i < ratingThresholdList.length; i++) {
@@ -49,6 +51,69 @@ export const roundToNearestThreshold = (rating: number): number => {
     }
   }
   return closest;
+};
+
+export const calculatePlayerRating = (
+  gameData: GameData[],
+  prevRating: number,
+  gpSinceLastRating: number,
+  leaguePER: number,
+  leagueAPER: number | undefined,
+  paceAdjustment: number
+): {
+  rating: number;
+  ratingString: string;
+  ratingMovement: string;
+  newGPSinceLastRating: number;
+} => {
+  // * Rating should be based on the last 82 games played
+  const sortedGameData = gameData
+    .sort((a, b) => b._createdAt.seconds - a._createdAt.seconds)
+    .slice(0, 82);
+
+  let uPER = 0;
+  let uPERCount = 0;
+  // * get the PER using this gameData
+  sortedGameData.forEach((data) => {
+    if (data?.uPER !== undefined) {
+      uPER += data.uPER;
+      uPERCount += 1;
+    }
+  });
+
+  uPER = uPER / uPERCount;
+
+  // * Recalculate PER here and readjust for new pace
+  const aPER = paceAdjustment * uPER;
+  const PER = aPER * (leaguePER / (leagueAPER || aPER));
+
+  const shouldUpdateRating = gpSinceLastRating !== gameData.length;
+  const rating = calculateRating(PER);
+  const ratingString = mapRatingToString(rating);
+  let ratingMovement = '';
+  if (shouldUpdateRating && prevRating && rating) {
+    // if the rating diff crosses a threshold, note that the rating has moved up or down. if the rating is the same, remove the note. IF the rating crosses two thresholds, note that the rating has moved up or down twice
+    const currentRatingThreshold = ratingThresholds().find(
+      (threshold) => roundToNearestThreshold(prevRating) < threshold
+    );
+    const newRatingThreshold = ratingThresholds().find(
+      (threshold) => roundToNearestThreshold(rating) < threshold
+    );
+    if (currentRatingThreshold && newRatingThreshold) {
+      if (currentRatingThreshold !== newRatingThreshold) {
+        if (rating > prevRating) {
+          ratingMovement = newRatingThreshold - currentRatingThreshold > 1 ? movedUpExtra : movedUp;
+        } else if (rating < prevRating) {
+          ratingMovement =
+            newRatingThreshold - currentRatingThreshold > 1 ? movedDownExtra : movedDown;
+        }
+      } else {
+        ratingMovement = '';
+      }
+    }
+  }
+  const newGPSinceLastRating = gameData.length;
+  return { rating, ratingString, ratingMovement, newGPSinceLastRating };
 };
 
 export default {};

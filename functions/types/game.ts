@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase-admin/firestore';
+
 export interface GameTriggerData {
   date: string;
   status: string;
@@ -44,7 +46,10 @@ export interface GameData {
   twopm: number;
   usageRate?: number;
   aPER?: number;
+  uPER?: number;
   isAI: number;
   uploadId?: string;
   oppPos: number;
+  _createdAt: Timestamp;
+  _updatedAt: Timestamp;
 }
