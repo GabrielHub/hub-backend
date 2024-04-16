@@ -2,6 +2,10 @@ import { Response, Request } from 'express';
 import admin from 'firebase-admin';
 import { GameData } from '../types';
 
+interface IGameData extends GameData {
+  id: string;
+}
+
 const fetchRelatedGames = async (req: Request, res: Response): Promise<any> => {
   const { uploadId } = req.query;
 
@@ -16,9 +20,9 @@ const fetchRelatedGames = async (req: Request, res: Response): Promise<any> => {
       .where('uploadId', '==', uploadId)
       .get()
       .then((querySnapshot) => {
-        const games: GameData[] = [];
+        const games: IGameData[] = [];
         querySnapshot.forEach((doc) => {
-          return games.push({ ...(doc.data() as GameData) });
+          return games.push({ ...(doc.data() as GameData), id: doc.id });
         });
         return games;
       });
