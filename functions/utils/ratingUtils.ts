@@ -16,6 +16,10 @@ const RATING_CONFIG = {
   Superstar: 10
 };
 
+const sortedRatingKeys = Object.keys(RATING_CONFIG).sort(
+  (a, b) => RATING_CONFIG[a] - RATING_CONFIG[b]
+);
+
 const mapRatingToString = (value: number): string => {
   const rating = Object.keys(RATING_CONFIG)
     .sort((a, b) => RATING_CONFIG[a] - RATING_CONFIG[b])
@@ -23,8 +27,6 @@ const mapRatingToString = (value: number): string => {
 
   return rating || 'MVP';
 };
-
-const ratingThresholds = () => Object.values(RATING_CONFIG);
 
 const calculateRating = (PER: number): number => {
   // Take a PER from 0 to 35+ and convert it to a 0-10 scale. a PER of 15 is always 5
@@ -40,17 +42,6 @@ const calculateRating = (PER: number): number => {
   }
 
   return rating;
-};
-
-const roundToNearestThreshold = (rating: number): number => {
-  const ratingThresholdList = ratingThresholds();
-  let closest = ratingThresholdList[0];
-  for (let i = 1; i < ratingThresholdList.length; i++) {
-    if (Math.abs(ratingThresholdList[i] - rating) < Math.abs(closest - rating)) {
-      closest = ratingThresholdList[i];
-    }
-  }
-  return closest;
 };
 
 export const calculatePlayerRating = (
@@ -91,27 +82,21 @@ export const calculatePlayerRating = (
   const rating = calculateRating(PER);
   const ratingString = mapRatingToString(rating);
   let ratingMovement = '';
+
   if (shouldUpdateRating && prevRating && rating) {
     // if the rating diff crosses a threshold, note that the rating has moved up or down. if the rating is the same, remove the note. IF the rating crosses two thresholds, note that the rating has moved up or down twice
-    const currentRatingThreshold = ratingThresholds().find(
-      (threshold) => roundToNearestThreshold(prevRating) < threshold
-    );
-    const newRatingThreshold = ratingThresholds().find(
-      (threshold) => roundToNearestThreshold(rating) < threshold
-    );
-    if (currentRatingThreshold && newRatingThreshold) {
-      if (currentRatingThreshold !== newRatingThreshold) {
-        if (rating > prevRating) {
-          ratingMovement = newRatingThreshold - currentRatingThreshold > 1 ? movedUpExtra : movedUp;
-        } else if (rating < prevRating) {
-          ratingMovement =
-            newRatingThreshold - currentRatingThreshold > 1 ? movedDownExtra : movedDown;
-        }
-      } else {
-        ratingMovement = '';
-      }
+    const currentRatingIndex = sortedRatingKeys.indexOf(ratingString);
+    const prevRatingIndex = sortedRatingKeys.indexOf(mapRatingToString(prevRating));
+
+    if (currentRatingIndex > prevRatingIndex) {
+      ratingMovement = currentRatingIndex - prevRatingIndex === 1 ? movedUp : movedUpExtra;
+    } else if (currentRatingIndex < prevRatingIndex) {
+      ratingMovement = prevRatingIndex - currentRatingIndex === 1 ? movedDown : movedDownExtra;
+    } else {
+      ratingMovement = '';
     }
   }
+
   const newGPSinceLastRating = gameData.length;
   return { rating, ratingString, ratingMovement, newGPSinceLastRating };
 };
