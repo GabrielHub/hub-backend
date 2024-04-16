@@ -1,5 +1,5 @@
-export const roundForReadable = (value: number, precision = 1): number => {
-  if (value === 0) {
+export const roundForReadable = (value: number | undefined | null, precision = 1): number => {
+  if (!value) {
     return 0;
   }
   const multiplier = 10 ** (precision || 0);

@@ -3,6 +3,7 @@ import { log, error } from 'firebase-functions/logger';
 import admin from 'firebase-admin';
 import dayjs from 'dayjs';
 import { PlayerData, Award } from '../types';
+import { roundForReadable } from '../utils';
 
 interface iPlayerData extends PlayerData {
   id: string;
@@ -212,13 +213,13 @@ export const generateAwards = async (req: Request, res: Response) => {
       bestShooter: {
         id: bestShooter.id,
         name: bestShooter.name,
-        value: `${bestShooter.threePerc} ${bestShooter.threepa} ${bestShooter.threepAR}`,
+        value: `${roundForReadable(bestShooter.threePerc)} ${roundForReadable(bestShooter.threepa)} ${roundForReadable(bestShooter.threepAR)}`,
         positions: bestShooter.topPositions
       },
       worstShooter: {
         id: worstShooter.id,
         name: worstShooter.name,
-        value: `${worstShooter.threePerc} ${worstShooter.threepAR}`,
+        value: `${roundForReadable(worstShooter.threePerc)} ${roundForReadable(worstShooter.threepAR)}`,
         positions: worstShooter.topPositions
       },
       mostActive: {
@@ -230,49 +231,49 @@ export const generateAwards = async (req: Request, res: Response) => {
       mostEfficient: {
         id: mostEfficient.id,
         name: mostEfficient.name,
-        value: `${mostEfficient.efgPerc} ${mostEfficient.astToRatio}`,
+        value: `${roundForReadable(mostEfficient.efgPerc)} ${roundForReadable(mostEfficient.astToRatio)}`,
         positions: mostEfficient.topPositions
       },
       leastEfficient: {
         id: leastEfficient.id,
         name: leastEfficient.name,
-        value: `${leastEfficient.efgPerc} ${leastEfficient.astToRatio}`,
+        value: `${roundForReadable(leastEfficient.efgPerc)} ${roundForReadable(leastEfficient.astToRatio)}`,
         positions: leastEfficient.topPositions
       },
       shotChucker: {
         id: shotChucker.id,
         name: shotChucker.name,
-        value: `${shotChucker?.efgPerc} ${shotChucker.fga}`,
+        value: `${roundForReadable(shotChucker?.efgPerc)} ${roundForReadable(shotChucker.fga)}`,
         positions: shotChucker.topPositions
       },
       fastbreakPlayer: {
         id: fastbreakPlayer.id,
         name: fastbreakPlayer.name,
-        value: `${fastbreakPlayer.pace} ${fastbreakPlayer.fga}`,
+        value: `${roundForReadable(fastbreakPlayer.pace)} ${roundForReadable(fastbreakPlayer.fga)}`,
         positions: fastbreakPlayer.topPositions
       },
       bestIntimidator: {
         id: bestIntimidator.id,
         name: bestIntimidator.name,
-        value: `${bestIntimidator.oEFGPerc} ${bestIntimidator.oFGA} ${bestIntimidator.blk}`,
+        value: `${roundForReadable(bestIntimidator.oEFGPerc)} ${roundForReadable(bestIntimidator.oFGA)} ${roundForReadable(bestIntimidator.blk)}`,
         positions: bestIntimidator.topPositions
       },
       bestPasser: {
         id: bestPlaymaker.id,
         name: bestPlaymaker.name,
-        value: `${bestPlaymaker.ast} ${bestPlaymaker.tov} ${bestPlaymaker.usageRate}`,
+        value: `${roundForReadable(bestPlaymaker.ast)} ${roundForReadable(bestPlaymaker.tov)} ${roundForReadable(bestPlaymaker.usageRate)}`,
         positions: bestPlaymaker.topPositions
       },
       ballHog: {
         id: ballHog.id,
         name: ballHog.name,
-        value: `${ballHog.astPerc} ${ballHog.usageRate}`,
+        value: `${roundForReadable(ballHog.astPerc)} ${roundForReadable(ballHog.usageRate)}`,
         positions: ballHog.topPositions
       },
       bestTwoWay: {
         id: bestTwoWay.id,
         name: bestTwoWay.name,
-        value: `${bestTwoWay.ortg} ${bestTwoWay.drtg} ${bestTwoWay.usageRate}`,
+        value: `${roundForReadable(bestTwoWay.ortg)} ${roundForReadable(bestTwoWay.drtg)} ${roundForReadable(bestTwoWay.usageRate)}`,
         positions: bestTwoWay.topPositions
       },
       allNBAFirst: allNBAFirst.map((player) => ({
@@ -284,7 +285,7 @@ export const generateAwards = async (req: Request, res: Response) => {
       turnoverMachine: {
         id: turnoverMachine.id,
         name: turnoverMachine.name,
-        value: `${turnoverMachine.tovPerc} ${turnoverMachine.tov}`,
+        value: `${roundForReadable(turnoverMachine.tovPerc)} ${roundForReadable(turnoverMachine.tov)}`,
         positions: turnoverMachine.topPositions
       },
       allNBASecond: allNBASecond.map((player) => ({
