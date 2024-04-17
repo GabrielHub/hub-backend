@@ -34,7 +34,7 @@ export interface Award {
   bestPasser: AwardObject;
   /** Highest TOV% weighted 50% with TOV, min 25 games */
   turnoverMachine: AwardObject;
-  /** Highest ratio of (ortg - drtg)/USG%, min 25 games */
+  /** Highest ratio of (ortg - drtg)/(1-USG%), min 25 games */
   bestTwoWay: AwardObject;
   /** Top 5 highest PER, min 25 games */
   allNBAFirst: AwardObject[];

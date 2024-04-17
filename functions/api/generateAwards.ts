@@ -180,8 +180,8 @@ export const generateAwards = async (req: Request, res: Response) => {
     // * Best TwoWay is the player with the highest ratio of (ortg - drtg)/USG%, min 25 games
     const bestTwoWay = minGamesPlayerList.reduce((prev, current) => {
       if (prev.ortg && prev.drtg && current.ortg && current.drtg && current.gp >= 25) {
-        const prevValue = (prev.ortg - prev.drtg) / prev.usageRate;
-        const currentValue = (current.ortg - current.drtg) / current.usageRate;
+        const prevValue = (prev.ortg - prev.drtg) / (100 - prev.usageRate);
+        const currentValue = (current.ortg - current.drtg) / (100 - current.usageRate);
         return prevValue > currentValue ? prev : current;
       }
       return prev;
