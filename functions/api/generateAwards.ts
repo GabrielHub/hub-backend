@@ -207,9 +207,23 @@ export const generateAwards = async (req: Request, res: Response) => {
     const allDefenseFirst = minGamesPlayerList.sort((a, b) => a.drtg - b.drtg).slice(0, 5);
 
     const awards: Award = {
-      mvp: { id: mvp.id, name: mvp.name, value: mvp.aPER, positions: mvp.topPositions },
-      dpoy: { id: dpoy.id, name: dpoy.name, value: dpoy.drtg, positions: dpoy.topPositions },
-      poaDefender: { id: poaDefender.id, name: poaDefender.name, value: poaDefender.drtg },
+      mvp: {
+        id: mvp.id,
+        name: mvp.name,
+        value: roundForReadable(mvp.PER),
+        positions: mvp.topPositions
+      },
+      dpoy: {
+        id: dpoy.id,
+        name: dpoy.name,
+        value: roundForReadable(dpoy.drtg),
+        positions: dpoy.topPositions
+      },
+      poaDefender: {
+        id: poaDefender.id,
+        name: poaDefender.name,
+        value: roundForReadable(poaDefender.drtg)
+      },
       bestShooter: {
         id: bestShooter.id,
         name: bestShooter.name,
