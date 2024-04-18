@@ -50,12 +50,9 @@ export interface PlayerData {
   oFGPerc: number | null;
   o3PPerc: number | null;
   oEFGPerc: number | null;
-  offensiveRanking: number;
-  defensiveRanking: number;
   PER: number;
   uPER: number;
   mp: number;
-  aPERGamesPlayed?: number;
   plusMinus: number;
   rating: number;
   ratingString: string;

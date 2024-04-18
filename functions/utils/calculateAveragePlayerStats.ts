@@ -106,8 +106,6 @@ export const calculateAveragePlayerStats = (
     oFGPerc: 0,
     o3PPerc: 0,
     oEFGPerc: 0,
-    offensiveRanking: 0,
-    defensiveRanking: 0,
     PER: 0,
     uPER: 0,
     mp: 0,

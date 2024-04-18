@@ -14,7 +14,7 @@ const GAME_TRIGGER_STATUS_ENUMS = {
 // * Update players when games are added
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const upsertPlayerData = async (snapshot: any) => {
-  const data = snapshot.after.data();
+  const data: GameData = snapshot.after.data();
   const { name, gameTrigger } = data;
   log('upsertPlayerData', name, gameTrigger);
   const gameRef = snapshot.after.ref;
@@ -47,7 +47,7 @@ export const upsertPlayerData = async (snapshot: any) => {
       // * If player does not exist, create it.
       // * Create a lowercase alias for the player. Remove duplicates
       const alias = Array.from(new Set([name, name.toLowerCase()]));
-      await db.collection('players').add({
+      const newPlayer: PlayerData = {
         name,
         alias,
         ftPerc: DEFAULT_FT_PERC,
@@ -55,6 +55,58 @@ export const upsertPlayerData = async (snapshot: any) => {
         ratingMovement: '',
         ratingString: '',
         gpSinceLastRating: 0,
+        aPER: data.aPER || 0,
+        uPER: data.uPER || 0,
+        astToRatio: data.ast / data.tov,
+        astPerc: data.astPerc || 0,
+        drebPerc: data.drebPerc || 0,
+        fgPerc: (data.fgm / data.fga) * 100 || 0,
+        twoPerc: (data.twopm / data.twopa) * 100 || 0,
+        threePerc: (data.threepm / data.threepa) * 100 || 0,
+        tsPerc: (data.pts / (2 * (data.fga + 0.44 * data.fta))) * 100 || 0,
+        efgPerc: ((data.fgm + 0.5 * data.threepm) / data.fga) * 100 || 0,
+        threepAR: (data.threepa / data.fga) * 100 || 0,
+        o3PA: data.o3PA || 0,
+        o3PM: data.o3PM || 0,
+        oFGA: data.oFGA || 0,
+        oFGM: data.oFGM || 0,
+        gp: 1,
+        mp: data.mp,
+        pts: data.pts,
+        treb: data.treb,
+        ast: data.ast,
+        stl: data.stl,
+        blk: data.blk,
+        pf: data.pf,
+        tov: data.tov,
+        fgm: data.fgm,
+        fga: data.fga,
+        twopm: data.twopm,
+        twopa: data.twopa,
+        threepm: data.threepm,
+        threepa: data.threepa,
+        ftm: data.ftm,
+        fta: data.fta,
+        oreb: data.oreb,
+        dreb: data.dreb,
+        pace: data.pace,
+        tovPerc: data.tovPerc ?? 0,
+        usageRate: data.usageRate ?? 0,
+        ortg: data.ortg ?? 0,
+        drtg: data.drtg ?? 0,
+        gameScore: data.gameScore ?? 0,
+        dd: data.dd,
+        td: data.td,
+        qd: data.qd,
+        plusMinus: data.plusMinus,
+        PER: data.PER,
+        o3PPerc: (data.o3PM / data.o3PA) * 100 || 0,
+        oFGPerc: (data.oFGM / data.oFGA) * 100 || 0,
+        oEFGPerc: ((data.oFGM + 0.5 * data.o3PM) / data.oFGA) * 100 || 0
+      };
+
+      await db.collection('players').add({
+        ...newPlayer,
         _createdAt: admin.firestore.Timestamp.now(),
         _updatedAt: admin.firestore.Timestamp.now()
       });

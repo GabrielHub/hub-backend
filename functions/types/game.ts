@@ -50,6 +50,9 @@ export interface GameData {
   isAI: number;
   uploadId?: string;
   oppPos: number;
+  pace: number;
+  plusMinus: number;
+  PER: number;
   _createdAt: Timestamp;
   _updatedAt: Timestamp;
 }
