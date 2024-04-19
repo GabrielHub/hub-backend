@@ -51,6 +51,7 @@ export const upsertPlayerData = async (snapshot: any) => {
         name,
         alias,
         ftPerc: DEFAULT_FT_PERC,
+        elo: INITIAL_ELO,
         rating: 0,
         ratingMovement: '',
         ratingString: '',

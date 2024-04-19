@@ -16,6 +16,11 @@ export interface RawPlayerData {
   fga: number;
   threepm: number;
   threepa: number;
+  isAI: number;
+  /** For ELO: Team Score + Game Score */
+  eloComparisonValue?: number;
+  /** For ELO: id to match in PlayerEloMap */
+  uid?: string;
 }
 
 export interface RawTeamData {
