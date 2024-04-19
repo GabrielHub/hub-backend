@@ -28,6 +28,7 @@ import { generateElo } from '../api/generateElo';
 // * Cloud triggers
 import { upsertPlayerData } from '../api/triggers/games';
 import { setCustomClaims } from '../api/triggers/admin';
+import { addEloAfterUpload } from '../api/triggers/elo';
 
 // * Cron jobs
 import deleteDuplicateGames from '../api/scheduled/deleteDuplicateGames';
@@ -72,6 +73,7 @@ app.get('/generateElo', checkIfAdmin, generateElo);
 exports.app = https.onRequest(app);
 
 // * Cloud Triggers
+exports.addEloAfterUpload = firestore.document('uploads/{uploadId}').onCreate(addEloAfterUpload);
 exports.upsertPlayerData = firestore.document('games/{gameId}').onWrite(upsertPlayerData);
 exports.setCustomClaims = auth.user().onCreate(setCustomClaims);
 exports.generateLeagueAverage = pubsub
