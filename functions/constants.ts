@@ -9,6 +9,7 @@ export const whitelist = [
 
 export const UPLOAD_KEY = defineSecret('HUB_UPLOAD_KEY');
 export const DEFAULT_FT_PERC = 67;
+export const INITIAL_ELO = 1500;
 
 // * For NBA Comparison
 export const PER_GAME = 'PerGame';

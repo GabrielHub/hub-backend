@@ -66,4 +66,5 @@ export interface PlayerData {
   stopsPer100?: number;
   pProd?: number;
   grd?: string;
+  elo?: number;
 }

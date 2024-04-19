@@ -50,7 +50,8 @@ export const calculateAveragePlayerStats = (
     'uploadId',
     '_createdAt',
     '_updatedAt',
-    'id'
+    'id',
+    'elo'
   ];
 
   // * Initialize player so we can add values before dividing at the end

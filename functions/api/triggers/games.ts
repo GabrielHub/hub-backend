@@ -2,7 +2,7 @@ import admin from 'firebase-admin';
 import { log, error } from 'firebase-functions/logger';
 import { calculateAveragePlayerStats, getPositions } from '../../utils';
 import { GameData, LeagueData, PlayerData } from '../../types';
-import { DEFAULT_FT_PERC } from '../../constants';
+import { DEFAULT_FT_PERC, INITIAL_ELO } from '../../constants';
 import { WriteResult } from 'firebase-admin/firestore';
 
 const GAME_TRIGGER_STATUS_ENUMS = {
@@ -161,6 +161,7 @@ export const upsertPlayerData = async (snapshot: any) => {
           gpSinceLastRating
         );
         avgPlayerStats.positions = getPositions(gameData);
+        avgPlayerStats.elo = playerData?.elo ?? INITIAL_ELO;
 
         // * For each position, calculate the average stats, then add to player sub-collection. the id of each subcollection is the position number
         Object.keys(avgPlayerStats.positions).forEach(async (pos) => {
@@ -177,6 +178,8 @@ export const upsertPlayerData = async (snapshot: any) => {
               prevRating,
               gpSinceLastRating
             );
+            posPlayerStats.elo = playerData?.elo ?? INITIAL_ELO;
+
             // * add the position to the player subcollection
             promises.push(
               db
@@ -204,6 +207,8 @@ export const upsertPlayerData = async (snapshot: any) => {
             prevRating,
             gpSinceLastRating
           );
+          poaDefenderStats.elo = playerData?.elo ?? INITIAL_ELO;
+
           promises.push(
             db
               .collection('players')

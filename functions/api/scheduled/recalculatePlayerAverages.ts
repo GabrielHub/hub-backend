@@ -4,6 +4,7 @@ import { WriteResult } from 'firebase-admin/firestore';
 
 import { calculateAveragePlayerStats, getPositions } from '../../utils';
 import { GameData, LeagueData } from '../../types';
+import { INITIAL_ELO } from '../../constants';
 
 export const recalculatePlayerAverages = async (): Promise<void> => {
   const db = admin.firestore();
@@ -65,6 +66,7 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
           gpSinceLastRating
         );
         avgPlayerStats.positions = getPositions(gameData);
+        avgPlayerStats.elo = playerData?.elo ?? INITIAL_ELO;
 
         // * For each position, calculate the average stats, then add to player sub-collection. the id of each subcollection is the position number
         Object.keys(avgPlayerStats.positions).forEach(async (pos) => {
@@ -81,6 +83,7 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
               prevRating,
               gpSinceLastRating
             );
+            posPlayerStats.elo = playerData?.elo ?? INITIAL_ELO;
             // * add the position to the player subcollection
             promises.push(
               db
@@ -108,6 +111,7 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
             prevRating,
             gpSinceLastRating
           );
+          poaDefenderStats.elo = playerData?.elo ?? INITIAL_ELO;
           promises.push(
             db
               .collection('players')
