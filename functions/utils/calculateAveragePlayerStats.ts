@@ -116,8 +116,18 @@ export const calculateAveragePlayerStats = (
   // * DRtg can be NaN if the opponent took 0 fg, so skip over games where this is the case and do different division
   const statTotalCount = {};
 
+  // * Sum up wins and losses
+  let win = 0;
+  let loss = 0;
+
   // * Sum the basic values (some % values are in here because they use team or opponent data)
   gameData.forEach((data) => {
+    if (data?.plusMinus && data.plusMinus > 0) {
+      win += 1;
+    } else if (data?.plusMinus && data.plusMinus < 0) {
+      loss += 1;
+    }
+
     Object.keys(data).forEach((stat) => {
       if (!propertiesToSkip.includes(stat) && playerData?.[stat] !== undefined) {
         // * Initialize statTotalCount for this stat
@@ -212,6 +222,10 @@ export const calculateAveragePlayerStats = (
   playerData.stopsPer100 = stopsPer100;
   playerData.pProd = pProd;
   playerData.grd = grd;
+
+  // * Add win loss totals
+  playerData.win = win;
+  playerData.loss = loss;
 
   return playerData;
 };

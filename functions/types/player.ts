@@ -67,4 +67,6 @@ export interface PlayerData {
   pProd?: number;
   grd?: string;
   elo?: number;
+  win?: number;
+  loss?: number;
 }
