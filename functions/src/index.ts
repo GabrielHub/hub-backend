@@ -69,6 +69,7 @@ app.get('/fetchPlayerDataByPosition', fetchPlayerDataByPosition);
 app.get('/fetchArchive', cache, fetchArchive);
 app.get('/fetchRelatedGames', fetchRelatedGames);
 app.get('/generateElo', checkIfAdmin, generateElo);
+app.get('/deleteDuplicateGames', checkIfAdmin, deleteDuplicateGames);
 
 exports.app = https.onRequest(app);
 
@@ -80,10 +81,6 @@ exports.generateLeagueAverage = pubsub
   .schedule('0 23 * * 7')
   .timeZone('America/New_York')
   .onRun(generateLeagueAverage);
-exports.deleteDuplicateGames = pubsub
-  .schedule('0 23 * * *')
-  .timeZone('America/New_York')
-  .onRun(deleteDuplicateGames);
 exports.recalculatePlayerAverages = pubsub
   .schedule('0 23 * * *')
   .timeZone('America/New_York')

@@ -59,6 +59,10 @@ const findDuplicateGames = (games: GameData[]): string[] => {
   return duplicateIds;
 };
 
+/**
+ * @description Deletes duplicate games from the database, used to be scheduled but now is done from dashboard
+ * @return {Promise<null>}
+ */
 const deleteDuplicateGames = async (): Promise<null> => {
   const db = admin.firestore();
   log('running deleteDuplicateGames');
