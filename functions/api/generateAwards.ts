@@ -164,7 +164,7 @@ export const generateAwards = async (req: Request, res: Response) => {
     // * Fastbreak player is the player with the highest pace to (1 - USG%/100) ratio, min 25 games
     const fastbreakPlayer = minGamesPlayerList.reduce((prev, current) => {
       if (prev.pace && current.pace && current.gp >= 25) {
-        return prev.pace / (1 - prev.usageRate / 100) < current.pace / (1 - current.usageRate / 100)
+        return prev.pace / (1 - prev.usageRate / 100) > current.pace / (1 - current.usageRate / 100)
           ? prev
           : current;
       }
@@ -182,8 +182,9 @@ export const generateAwards = async (req: Request, res: Response) => {
     // * Best TwoWay is the player with the highest (ortg/(1-usageRate) - (2 * drtg)), min 25 games
     const bestTwoWay = minGamesPlayerList.reduce((prev, current) => {
       if (prev.ortg && prev.drtg && current.ortg && current.drtg && current.gp >= 25) {
-        const prevValue = prev.ortg / (1 - prev.usageRate / 100) - 2 * prev.drtg;
-        const currentValue = current.ortg / (1 - current.usageRate / 100) - 2 * current.drtg;
+        const prevValue = prev.ortg / (1 - prev.usageRate / 100) - (prev.drtg / prev.pace) * 100;
+        const currentValue =
+          current.ortg / (1 - current.usageRate / 100) - (current.drtg / current.pace) * 100;
 
         return prevValue > currentValue ? prev : current;
       }
