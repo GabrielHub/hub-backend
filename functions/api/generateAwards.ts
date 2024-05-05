@@ -182,21 +182,50 @@ export const generateAwards = async (req: Request, res: Response) => {
     // * Best TwoWay is the player with the highest (ortg/(1-usageRate) - (2 * drtg)), min 25 games
     const bestTwoWay = minGamesPlayerList.reduce((prev, current) => {
       if (prev.ortg && prev.drtg && current.ortg && current.drtg && current.gp >= 25) {
-        const prevValue = prev.ortg / (1 - prev.usageRate / 100) - (prev.drtg / prev.pace) * 100;
+        const prevValue =
+          prev.ortg / (1 - prev.usageRate / 100) - 2 * (prev.drtg / prev.pace) * 100;
         const currentValue =
-          current.ortg / (1 - current.usageRate / 100) - (current.drtg / current.pace) * 100;
+          current.ortg / (1 - current.usageRate / 100) - 2 * (current.drtg / current.pace) * 100;
 
         return prevValue > currentValue ? prev : current;
       }
       return prev;
     }, minGamesPlayerList[0]);
 
-    // * Turnover Machine is the player with the highest TOV% weighted 50% with TOV, min 25 games
+    // * Turnover Machine is the player with the highest TOV%, min 25 games
     const turnoverMachine = minGamesPlayerList.reduce((prev, current) => {
       if (prev.tovPerc && current.tovPerc && current.gp >= 25) {
-        const prevWeighted = prev.tovPerc * 0.5 + prev.tov;
-        const currentWeighted = current.tovPerc * 0.5 + current.tov;
+        const prevWeighted = prev.tovPerc;
+        const currentWeighted = current.tovPerc;
         return prevWeighted > currentWeighted ? prev : current;
+      }
+      return prev;
+    }, minGamesPlayerList[0]);
+
+    // * Winner of the year has the best win percentage
+    const winnerOfTheYear = minGamesPlayerList.reduce((prev, current) => {
+      if (prev.win && current.win && current.gp >= 25) {
+        const prevValue = prev.win / prev.gp;
+        const currentValue = current.win / current.gp;
+        return prevValue > currentValue ? prev : current;
+      }
+      return prev;
+    }, minGamesPlayerList[0]);
+
+    // * Best ranked player is the player with the highest elo, min 25 games
+    const rankerOfTheYear = minGamesPlayerList.reduce((prev, current) => {
+      if (prev.elo && current.elo && current.gp >= 25) {
+        return prev.elo > current.elo ? prev : current;
+      }
+      return prev;
+    }, minGamesPlayerList[0]);
+
+    // * Team Player is the player with the lowest USG% and highest eFG%, min 25 games
+    const teamPlayerOfTheYear = minGamesPlayerList.reduce((prev, current) => {
+      if (prev.efgPerc && current.efgPerc && current.gp >= 25) {
+        const prevValue = prev.usageRate / prev.efgPerc;
+        const currentValue = current.usageRate / current.efgPerc;
+        return prevValue < currentValue ? prev : current;
       }
       return prev;
     }, minGamesPlayerList[0]);
@@ -305,6 +334,24 @@ export const generateAwards = async (req: Request, res: Response) => {
         name: turnoverMachine.name,
         value: `${roundForReadable(turnoverMachine.tovPerc)} ${roundForReadable(turnoverMachine.tov)}`,
         positions: turnoverMachine.topPositions
+      },
+      winnerOfTheYear: {
+        id: winnerOfTheYear.id,
+        name: winnerOfTheYear.name,
+        value: `${roundForReadable(((winnerOfTheYear?.win ?? 0) / (winnerOfTheYear?.gp ?? 1)) * 100)}`,
+        positions: winnerOfTheYear.topPositions
+      },
+      rankerOfTheYear: {
+        id: rankerOfTheYear.id,
+        name: rankerOfTheYear.name,
+        value: roundForReadable(rankerOfTheYear.elo),
+        positions: rankerOfTheYear.topPositions
+      },
+      teamPlayerOfTheYear: {
+        id: teamPlayerOfTheYear.id,
+        name: teamPlayerOfTheYear.name,
+        value: `${roundForReadable(teamPlayerOfTheYear.usageRate)} ${roundForReadable(teamPlayerOfTheYear.efgPerc)}`,
+        positions: teamPlayerOfTheYear.topPositions
       },
       allNBASecond: allNBASecond.map((player) => ({
         id: player.id,

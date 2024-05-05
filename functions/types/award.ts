@@ -36,6 +36,9 @@ export interface Award {
   turnoverMachine: AwardObject;
   /** Highest ratio of (ortg - drtg)/(1-USG%), min 25 games */
   bestTwoWay: AwardObject;
+  winnerOfTheYear: AwardObject;
+  rankerOfTheYear: AwardObject;
+  teamPlayerOfTheYear: AwardObject;
   /** Top 5 highest PER, min 25 games */
   allNBAFirst: AwardObject[];
   /** Top 5 PER after allNBAFirst, min 25 games */
