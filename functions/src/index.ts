@@ -54,7 +54,8 @@ app.use(limiter);
 
 // * REST endpoints
 app.post('/upload', checkIfAdmin, uploadStats);
-app.get('/testFunctions', checkIfAdmin, testFirebaseStuff);
+// TODO put the checkIfAdmin back
+app.get('/testFunctions', testFirebaseStuff);
 app.post('/queryTableData', fetchForTable);
 app.get('/recalculatePlayerAverages', checkIfAdmin, recalculatePlayerAverageAPI);
 app.get('/generateLeagueAverage', checkIfAdmin, generateLeagueAverageAPI);

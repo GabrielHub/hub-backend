@@ -13,7 +13,6 @@ export const calculateDoubles = (
 ): DoublesResult => {
   const stats = [points, rebounds, assists, steals, blocks];
   let count = 0;
-
   stats.forEach((stat) => {
     if (stat >= 10) {
       count++;
