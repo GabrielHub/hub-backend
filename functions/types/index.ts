@@ -5,3 +5,4 @@ export * from './league';
 export * from './nbaPlayer';
 export * from './rest';
 export * from './award';
+export * from './audits';
