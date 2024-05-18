@@ -1,11 +1,14 @@
 import admin from 'firebase-admin';
 
-const getAuthToken = (req, res, next) => {
+export const returnAuthToken = (req): string | null => {
   if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
-    req.authToken = req.headers.authorization.split(' ')[1];
-  } else {
-    req.authToken = null;
+    return req.headers.authorization.split(' ')[1];
   }
+  return null;
+};
+
+const getAuthToken = (req, res, next) => {
+  req.authToken = returnAuthToken(req);
   next();
 };
 
