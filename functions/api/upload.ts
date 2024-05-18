@@ -1,5 +1,5 @@
 import admin from 'firebase-admin';
-import { log, warn } from 'firebase-functions/logger';
+import { log, warn, error } from 'firebase-functions/logger';
 import _ from 'lodash';
 import {
   calculateAPER,
@@ -12,7 +12,9 @@ import {
   getExpectedORebounds
 } from '../utils';
 import { DEFAULT_FT_PERC } from '../constants';
-import { LeagueData, RawPlayerData, RawTeamData, TotalRawTeamData } from '../types';
+import { Audit, LeagueData, RawPlayerData, RawTeamData, TotalRawTeamData } from '../types';
+import { addAudit } from '../utils/addAudit';
+import { returnAuthToken } from '../src/auth';
 
 // ? Used to estimate OREB
 const FG_OREB_PERC = 0.22;
@@ -343,6 +345,19 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     // eslint-disable-next-line no-console
     // console.log('Document written with ID: ', docRef);
   });
+
+  const authToken = returnAuthToken(req);
+  if (!authToken) {
+    error('No admin found for audit while trying to upload screenshot', uploadId);
+  } else {
+    const userInfo = await admin.auth().verifyIdToken(authToken);
+    const auditData: Audit = {
+      uploadId,
+      admin: userInfo?.email || '',
+      description: ' uploaded screenshot'
+    };
+    await addAudit(auditData);
+  }
 
   log('uploadStats', { formattedPlayerData, formattedTeamData });
 
