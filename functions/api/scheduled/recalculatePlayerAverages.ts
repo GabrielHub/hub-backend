@@ -2,20 +2,23 @@ import admin from 'firebase-admin';
 import { error, log } from 'firebase-functions/logger';
 import { WriteResult } from 'firebase-admin/firestore';
 import { calculateAveragePlayerStats, getLeagueData, getPositions } from '../../utils';
-import { GameData } from '../../types';
+import { GameData, PlayerData } from '../../types';
 import { INITIAL_ELO } from '../../constants';
+
+interface iPlayerData extends PlayerData {
+  id: string;
+}
 
 export const recalculatePlayerAverages = async (): Promise<void> => {
   const db = admin.firestore();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const playerList: any[] = [];
+  const playerList: iPlayerData[] = [];
 
   log('running recalculatePlayerAverages');
 
   try {
     const querySnapshot = await db.collection('players').get();
     querySnapshot.docs.forEach((doc) => {
-      const playerData = doc.data();
+      const playerData = doc.data() as PlayerData;
       playerList.push({ ...playerData, id: doc.id });
     });
 
