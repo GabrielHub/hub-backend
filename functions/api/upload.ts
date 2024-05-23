@@ -43,7 +43,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
   const playerFreeThrowData = {};
   // * Force all player names to be lowercase
   rawPlayerData.forEach((player) => {
-    player.name = player.name.toLowerCase();
+    player.name = player.name.trim().toLowerCase();
   });
 
   log('uploadStats', rawTeamData, rawPlayerData);

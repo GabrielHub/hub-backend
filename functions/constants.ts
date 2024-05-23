@@ -4,7 +4,8 @@ export const whitelist = [
   'http://localhost:3000',
   'https://gabrielhub.github.io/hub',
   'https://gabrielhub-60a30.web.app',
-  'https://gabrielhub-60a30.firebaseapp.com'
+  'https://gabrielhub-60a30.firebaseapp.com',
+  'https://bread2basket.com'
 ];
 
 export const UPLOAD_KEY = defineSecret('HUB_UPLOAD_KEY');
