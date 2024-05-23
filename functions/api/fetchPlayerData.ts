@@ -1,7 +1,8 @@
 import admin from 'firebase-admin';
 import { error } from 'firebase-functions/logger';
 import { Response } from 'express';
-import { LeagueData, PlayerData } from '../types';
+import { PlayerData } from '../types';
+import { getLeagueData } from '../utils';
 
 // * For individual player pages
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,19 +39,7 @@ const fetchPlayerData = async (req: any, res: Response): Promise<Response<any>> 
 
   let avgPlayerData: PlayerData = playerData;
 
-  const leagueData = await db
-    .collection('league')
-    .orderBy('createdAt', 'desc')
-    .limit(1)
-    .get()
-    .then((querySnapshot) => {
-      const league: LeagueData[] = [];
-      querySnapshot.forEach((doc) => {
-        league.push(doc.data() as LeagueData);
-      });
-      return league[0];
-    });
-
+  const leagueData = await getLeagueData();
   try {
     if (position && !lock) {
       // * Get averages from player sub collection positions, where the doc id is the position number

@@ -1,9 +1,8 @@
 import admin from 'firebase-admin';
 import { error, log } from 'firebase-functions/logger';
 import { WriteResult } from 'firebase-admin/firestore';
-
-import { calculateAveragePlayerStats, getPositions } from '../../utils';
-import { GameData, LeagueData } from '../../types';
+import { calculateAveragePlayerStats, getLeagueData, getPositions } from '../../utils';
+import { GameData } from '../../types';
 import { INITIAL_ELO } from '../../constants';
 
 export const recalculatePlayerAverages = async (): Promise<void> => {
@@ -21,18 +20,7 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
     });
 
     // * Get league data to recalculate PER based on league averages
-    const leagueData = await db
-      .collection('league')
-      .orderBy('createdAt', 'desc')
-      .limit(1)
-      .get()
-      .then((querySnapshot) => {
-        const league: LeagueData[] = [];
-        querySnapshot.forEach((doc) => {
-          league.push(doc.data() as LeagueData);
-        });
-        return league[0];
-      });
+    const leagueData = await getLeagueData();
 
     for (const playerData of playerList) {
       const {

@@ -9,10 +9,11 @@ import {
   calculateFreeThrowsMade,
   calculateTwoPointers,
   estimateFreeThrowAttempts,
-  getExpectedORebounds
+  getExpectedORebounds,
+  getLeagueData
 } from '../utils';
 import { DEFAULT_FT_PERC } from '../constants';
-import { Audit, LeagueData, RawPlayerData, RawTeamData, TotalRawTeamData } from '../types';
+import { Audit, RawPlayerData, RawTeamData, TotalRawTeamData } from '../types';
 import { addAudit } from '../utils/addAudit';
 import { returnAuthToken } from '../src/auth';
 
@@ -58,19 +59,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
   });
 
   // * Fetch league data for PER
-  const league = await db
-    .collection('league')
-    .orderBy('createdAt', 'desc')
-    .limit(1)
-    .get()
-    .then((querySnapshot) => {
-      // * should only be one because of limit
-      const leagueData: LeagueData[] = [];
-      querySnapshot.forEach((doc) => {
-        leagueData.push(doc.data() as LeagueData);
-      });
-      return leagueData?.[0];
-    });
+  const league = await getLeagueData();
 
   // * Fetch possible Free Throw data for each player
   const playerNames = rawPlayerData.map(({ name }) => name);

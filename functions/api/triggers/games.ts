@@ -1,10 +1,14 @@
 import admin from 'firebase-admin';
 import { log, error } from 'firebase-functions/logger';
-import { calculateAveragePlayerStats, getPositions } from '../../utils';
-import { GameData, LeagueData, PlayerData } from '../../types';
+import {
+  calculateAveragePlayerStats,
+  getLeagueData,
+  getPositions,
+  calculatePlayerRating
+} from '../../utils';
+import { GameData, PlayerData } from '../../types';
 import { DEFAULT_FT_PERC, INITIAL_ELO } from '../../constants';
 import { WriteResult } from 'firebase-admin/firestore';
-
 const GAME_TRIGGER_STATUS_ENUMS = {
   IN_PROGRESS: 'in-progress',
   SUCCESS: 'success',
@@ -42,20 +46,32 @@ export const upsertPlayerData = async (snapshot: any) => {
       .where('alias', 'array-contains', name)
       .get();
 
+    // * Get league data to recalculate PER based on league averages
+    const leagueData = await getLeagueData();
+
     // * Query for all game data and overwrite player data to fix data errors and essentially resync data
     if (playerQuerySnapshot.empty) {
       // * If player does not exist, create it.
       // * Create a lowercase alias for the player. Remove duplicates
       const alias = Array.from(new Set([name, name.toLowerCase()]));
+      const paceAdjustment = leagueData?.pace ? leagueData?.pace / data.pace : data.pace;
+      const { rating, ratingString, ratingMovement, newGPSinceLastRating } = calculatePlayerRating(
+        [data],
+        0,
+        0,
+        leagueData.PER,
+        leagueData.aPER,
+        paceAdjustment
+      );
       const newPlayer: PlayerData = {
         name,
         alias,
         ftPerc: DEFAULT_FT_PERC,
         elo: INITIAL_ELO,
-        rating: 0,
-        ratingMovement: '',
-        ratingString: '',
-        gpSinceLastRating: 0,
+        rating,
+        ratingMovement,
+        ratingString,
+        gpSinceLastRating: newGPSinceLastRating,
         aPER: data.aPER || 0,
         uPER: data.uPER || 0,
         astToRatio: data.ast / data.tov,
@@ -112,21 +128,6 @@ export const upsertPlayerData = async (snapshot: any) => {
         _updatedAt: admin.firestore.Timestamp.now()
       });
     } else {
-      // * Get league data to recalculate PER based on league averages
-      const leagueData = await db
-        .collection('league')
-        .orderBy('createdAt', 'desc')
-        .limit(1)
-        .get()
-        .then((querySnapshot) => {
-          // * should only be one because of limit
-          const league: LeagueData[] = [];
-          querySnapshot.forEach((doc) => {
-            league.push(doc.data() as LeagueData);
-          });
-          return league[0];
-        });
-
       // * collect all games by ALIAS includes NAME and use that for the calculate function
       // * There could theoretically be bad data, and an alias could be in multiple players. Avoid this by taking the first
       // TODO Error notifications/logs if there are more than one unique alias in someone's aliases?
@@ -229,7 +230,6 @@ export const upsertPlayerData = async (snapshot: any) => {
             .doc(id)
             .set({
               ...avgPlayerStats,
-              _createdAt: admin.firestore.Timestamp.now(),
               _updatedAt: admin.firestore.Timestamp.now()
             })
         );
