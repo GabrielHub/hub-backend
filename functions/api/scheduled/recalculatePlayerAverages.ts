@@ -2,8 +2,11 @@ import admin from 'firebase-admin';
 import { error, log } from 'firebase-functions/logger';
 import { WriteResult } from 'firebase-admin/firestore';
 import { calculateAveragePlayerStats, getLeagueData, getPositions } from '../../utils';
-import { GameData, PlayerData } from '../../types';
+import { Audit, GameData, PlayerData } from '../../types';
 import { INITIAL_ELO } from '../../constants';
+import { addAudit } from '../../utils/addAudit';
+import { returnAuthToken } from '../../src/auth';
+import req from '../../api/dashboardFunctions';
 
 interface iPlayerData extends PlayerData {
   id: string;
@@ -129,6 +132,21 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
 
         await Promise.all(promises);
       }
+    }
+    // add audit
+    const uploadRef = db.collection('recalculatePlayerAverages').doc();
+    const uploadId = uploadRef.id;
+    const authToken = returnAuthToken(req);
+    if (!authToken) {
+      error('No admin found for audit responsible for recalculating player averages', uploadId);
+    } else {
+      const userInfo = await admin.auth().verifyIdToken(authToken);
+      const auditData: Audit = {
+        uploadId,
+        admin: userInfo?.email || '',
+        description: ' recalculated player averages'
+      };
+      await addAudit(auditData);
     }
   } catch (err) {
     error('Error running recalculatePlayerAverages', err);
