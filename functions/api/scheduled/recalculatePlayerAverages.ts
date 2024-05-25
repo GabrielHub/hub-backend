@@ -134,15 +134,12 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
       }
     }
     // add audit
-    const uploadRef = db.collection('recalculatePlayerAverages').doc();
-    const uploadId = uploadRef.id;
     const authToken = returnAuthToken(req);
     if (!authToken) {
-      error('No admin found for audit responsible for recalculating player averages', uploadId);
+      error('No admin found for audit responsible for recalculating player averages');
     } else {
       const userInfo = await admin.auth().verifyIdToken(authToken);
       const auditData: Audit = {
-        uploadId,
         admin: userInfo?.email || '',
         description: ' recalculated player averages'
       };
