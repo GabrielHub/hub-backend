@@ -4,7 +4,7 @@ import { error } from 'firebase-functions/logger';
 
 export const addAudit = async (data: Audit) => {
   try {
-    const audits = {
+    const audits: Audit = {
       ...data,
       createdAt: new Date().toISOString()
     };

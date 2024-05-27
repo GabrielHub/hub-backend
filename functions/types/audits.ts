@@ -5,5 +5,5 @@ export interface Audit {
   admin: string;
   description: string;
   reason?: string;
-  createdAt?: number;
+  createdAt?: string;
 }
