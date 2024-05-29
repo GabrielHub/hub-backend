@@ -6,12 +6,13 @@ const movedUpExtra = '(↑↑)';
 const movedDownExtra = '(↓↓)';
 
 const RATING_CONFIG = {
-  GLeague: 3,
-  Bench: 4.3,
+  Rookie: 3,
+  Bench: 4,
   Rotation: 5,
-  Starter: 5.4,
+  Starter: 5.5,
+  ThirdOption: 6,
   SecondOption: 6.5,
-  AllStar: 7.5,
+  AllStar: 8,
   /** Highest value is 10 */
   Superstar: 10
 };
