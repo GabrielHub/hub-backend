@@ -1,3 +1,4 @@
+import admin from 'firebase-admin';
 import { Request, Response } from 'express';
 import { error } from 'firebase-functions/logger';
 import { recalculatePlayerAverages } from './scheduled/recalculatePlayerAverages';
@@ -5,7 +6,6 @@ import generateLeagueAverage from './scheduled/generateLeagueAverage';
 import { returnAuthToken } from '../src/auth';
 import { Audit } from '../types/audits';
 import { addAudit } from '../utils/addAudit';
-import admin from 'firebase-admin';
 
 export const recalculatePlayerAverageAPI = async (req: Request, res: Response) => {
   try {
