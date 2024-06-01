@@ -2,8 +2,10 @@ import { Request, Response } from 'express';
 import { log, error } from 'firebase-functions/logger';
 import admin from 'firebase-admin';
 import { INITIAL_ELO } from '../constants';
-import { PlayerData, RawPlayerData } from '../types';
+import { Audit, PlayerData, RawPlayerData } from '../types';
 import { calculateGameScore, calculateNewElo } from '../utils/elo';
+import { returnAuthToken } from '../src/auth';
+import { addAudit } from '../utils/addAudit';
 
 /*
  * @description Generate Elo ratings for all players in the database
@@ -83,6 +85,18 @@ export const generateElo = async (req: Request, res: Response) => {
       batch.update(playerRef, { elo });
     });
     await batch.commit();
+    // add audit
+    const authToken = returnAuthToken(req);
+    if (!authToken) {
+      error('No admin found responsible for generating ELO');
+    } else {
+      const userInfo = await admin.auth().verifyIdToken(authToken);
+      const auditData: Audit = {
+        admin: userInfo?.email || '',
+        description: ' generated ELO'
+      };
+      await addAudit(auditData);
+    }
     return res.status(200).send('Elo ratings generated');
   } catch (err) {
     error(err);

@@ -2,8 +2,10 @@ import { Request, Response } from 'express';
 import { log, error } from 'firebase-functions/logger';
 import admin from 'firebase-admin';
 import dayjs from 'dayjs';
-import { PlayerData, Award } from '../types';
+import { PlayerData, Award, Audit } from '../types';
 import { roundForReadable } from '../utils';
+import { returnAuthToken } from '../src/auth';
+import { addAudit } from '../utils/addAudit';
 
 interface iPlayerData extends PlayerData {
   id: string;
@@ -378,7 +380,18 @@ export const generateAwards = async (req: Request, res: Response) => {
         _createdAt: admin.firestore.Timestamp.now(),
         createdAt: dayjs().format()
       });
-
+    // add audit
+    const authToken = returnAuthToken(req);
+    if (!authToken) {
+      error('No admin found responsible for generating awards');
+    } else {
+      const userInfo = await admin.auth().verifyIdToken(authToken);
+      const auditData: Audit = {
+        admin: userInfo?.email || '',
+        description: ' generated awards'
+      };
+      await addAudit(auditData);
+    }
     return res.status(200).send('Awards generated');
   } catch (err) {
     error('Error generating awards', err);
