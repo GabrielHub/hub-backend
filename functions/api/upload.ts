@@ -234,8 +234,10 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     const opposingTeamKey = Object.keys(formattedTeamData).find(
       (teamDataKey) => parseInt(teamDataKey, 10) !== teamKey
     );
+    let pace = team.totalPoss;
     if (opposingTeamKey) {
       plusMinus = team.pts - formattedTeamData[opposingTeamKey].pts;
+      pace = (team.totalPoss + formattedTeamData[opposingTeamKey].totalPoss) / 2;
     }
 
     const opponent = rawPlayerData.find(
@@ -259,7 +261,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     // eslint-disable-next-line prefer-const
     formattedPlayer = {
       ...playerData,
-      pace: team.totalPoss,
+      pace,
       mp,
       dreb,
       oreb,

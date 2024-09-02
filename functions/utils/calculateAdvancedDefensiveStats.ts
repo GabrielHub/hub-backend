@@ -27,6 +27,9 @@ export const calculateAdvancedDefensiveStats = (
   const opFTDivision = opFTA !== 0 ? opFTM / opFTA : 0;
   const opMin = 20;
 
+  // Adjust the scaling factor for shorter games
+  const scalingFactor = 48 / opMin; // This will be 2.4 for 20-minute games
+
   const dorPerc = opOREB / (opOREB + team.dreb);
   // * If an opponent takes 0 shots, defensive rating cannot be calculated
   const dfgPerc = opponent.fgm / opponent.fga;
@@ -48,7 +51,7 @@ export const calculateAdvancedDefensiveStats = (
   // * DRTG:  how many points the player allowed per 100 possessions he individually faced while on the court.
   const drtg =
     teamDefensiveRating +
-    0.2 * (100 * defensivePtsPerScoringPoss * (1 - stopPerc) - teamDefensiveRating);
+    0.2 * scalingFactor * (100 * defensivePtsPerScoringPoss * (1 - stopPerc) - teamDefensiveRating);
 
   // * DRB%: the percentage of available defensive rebounds a player grabbed while he was on the floor. 0 is the opponents offensive rebounds
   const drebPerc = (100 * (player.dreb * (team.mp / 5))) / (player.mp * (team.dreb + opOREB));
