@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
 import admin from 'firebase-admin';
+import { Request, Response } from 'express';
 import { error } from 'firebase-functions/logger';
 import { recalculatePlayerAverages } from './scheduled/recalculatePlayerAverages';
 import generateLeagueAverage from './scheduled/generateLeagueAverage';

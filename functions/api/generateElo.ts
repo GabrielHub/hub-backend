@@ -104,6 +104,18 @@ export const generateElo = async (req: Request, res: Response) => {
     }
 
     await batch.commit();
+    // add audit
+    const authToken = returnAuthToken(req);
+    if (!authToken) {
+      error('No admin found responsible for generating ELO');
+    } else {
+      const userInfo = await admin.auth().verifyIdToken(authToken);
+      const auditData: Audit = {
+        admin: userInfo?.email || '',
+        description: ' generated ELO'
+      };
+      await addAudit(auditData);
+    }
     return res.status(200).send('Elo ratings generated');
   } catch (err) {
     error(err);
