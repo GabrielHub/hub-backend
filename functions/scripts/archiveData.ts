@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
 
-const YEAR_TO_ARCHIVE = 2023;
+const YEAR_TO_ARCHIVE = 2024;
 
 export const archiveData = async (): Promise<void> => {
   const db = admin.firestore();
