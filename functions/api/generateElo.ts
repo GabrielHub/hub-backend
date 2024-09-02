@@ -2,8 +2,10 @@ import { Request, Response } from 'express';
 import { log, error } from 'firebase-functions/logger';
 import admin from 'firebase-admin';
 import { INITIAL_ELO } from '../constants';
-import { PlayerData, RawPlayerData } from '../types';
+import { Audit, PlayerData, RawPlayerData } from '../types';
 import { calculateGameScore, calculateNewElo } from '../utils/elo';
+import { returnAuthToken } from '../src/auth';
+import { addAudit } from '../utils/addAudit';
 
 /*
  * @description Generate Elo ratings for all players in the database
@@ -11,6 +13,9 @@ import { calculateGameScore, calculateNewElo } from '../utils/elo';
  */
 export const generateElo = async (req: Request, res: Response) => {
   log('Generating Elo ratings');
+
+  const { reason } = req.query;
+
   const db = admin.firestore();
   try {
     const playerSnapshot = await db.collection('players').get();
@@ -82,6 +87,22 @@ export const generateElo = async (req: Request, res: Response) => {
       const playerRef = db.collection('players').doc(uid);
       batch.update(playerRef, { elo });
     });
+
+    if (reason && typeof reason === 'string') {
+      const authToken = returnAuthToken(req);
+      if (!authToken) {
+        error('No admin found for audit generating elo');
+      } else {
+        const userInfo = await admin.auth().verifyIdToken(authToken);
+        const auditData: Audit = {
+          admin: userInfo?.email || '',
+          description: ' generated ELO',
+          reason
+        };
+        await addAudit(auditData);
+      }
+    }
+
     await batch.commit();
     return res.status(200).send('Elo ratings generated');
   } catch (err) {

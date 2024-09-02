@@ -1,6 +1,9 @@
 import admin from 'firebase-admin';
 import { log, error } from 'firebase-functions/logger';
-import { GameData } from '../../types';
+import { Request, Response } from 'express';
+import { Audit, GameData } from '../../types';
+import { returnAuthToken } from '../../src/auth';
+import { addAudit } from '../../utils/addAudit';
 
 // * Fields to use in comparisons (checking if a game is a duplicate)
 const similarityFieldsToCheck = [
@@ -61,9 +64,12 @@ const findDuplicateGames = (games: GameData[]): string[] => {
 
 /**
  * @description Deletes duplicate games from the database, used to be scheduled but now is done from dashboard
- * @return {Promise<null>}
+ * @param {Request} req - The request object
+ * @param {Response} res - The response object
  */
-const deleteDuplicateGames = async (): Promise<null> => {
+const deleteDuplicateGames = async (req: Request, res: Response) => {
+  const { reason } = req.query as { reason?: string };
+
   const db = admin.firestore();
   log('running deleteDuplicateGames');
   try {
@@ -76,16 +82,31 @@ const deleteDuplicateGames = async (): Promise<null> => {
 
     const gamesToDelete = findDuplicateGames(gameList);
 
+    if (reason && typeof reason === 'string') {
+      const authToken = returnAuthToken(req);
+      if (!authToken) {
+        error('No admin found for audit deleting duplicate games');
+      } else {
+        const userInfo = await admin.auth().verifyIdToken(authToken);
+        const auditData: Audit = {
+          admin: userInfo?.email || '',
+          description: ' deleted duplicate games',
+          reason
+        };
+        await addAudit(auditData);
+      }
+    }
+
     log('deleting', gamesToDelete.length, 'duplicate games');
 
     const promises = gamesToDelete.map((id) => db.collection('games').doc(id).delete());
 
     await Promise.all(promises);
 
-    return null;
+    return res.status(200).send('Deleted duplicate games');
   } catch (err) {
     error('Error running deleteDuplicateGames', err);
-    return null;
+    return res.status(500).send('Error running deleteDuplicateGames');
   }
 };
 
