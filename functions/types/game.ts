@@ -53,6 +53,7 @@ export interface GameData {
   pace: number;
   plusMinus: number;
   PER: number;
+  playerID: string;
   _createdAt: Timestamp;
   _updatedAt: Timestamp;
 }
