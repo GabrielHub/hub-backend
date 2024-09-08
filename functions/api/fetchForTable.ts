@@ -33,8 +33,11 @@ const fetchForTable = async (req: IRequest, res: Response): Promise<void> => {
       .get();
 
     querySnapshot.forEach((doc) => {
-      playerData.push({ ...(doc.data() as PlayerData), id: doc.id, rank });
-      rank += 1;
+      const data = doc.data() as PlayerData;
+      if (data.gp > 1) {
+        playerData.push({ ...data, id: doc.id, rank });
+        rank += 1;
+      }
     });
   } catch (error) {
     throw new Error('Could not query firestore');
