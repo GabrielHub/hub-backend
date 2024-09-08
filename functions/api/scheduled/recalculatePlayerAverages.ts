@@ -26,24 +26,15 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
     const leagueData = await getLeagueData();
 
     for (const playerData of playerList) {
-      const {
-        name: storedName,
-        alias,
-        ftPerc,
-        id,
-        rating: prevRating,
-        gpSinceLastRating
-      } = playerData;
-
-      // * collect all games by ALIAS includes NAME and use that for the calculate function
-      // * There could theoretically be bad data, and an alias could be in multiple players. Avoid this by taking the first
-      // TODO Error notifications/logs if there are more than one unique alias in someone's aliases?
+      const { name: storedName, alias, id, rating: prevRating, gpSinceLastRating } = playerData;
 
       // * Skip AI games
-      const gameDataRef = await db.collection('games').where('name', 'in', alias).get();
-      const gameData = gameDataRef.docs
-        .map((doc) => doc.data() as GameData)
-        .filter((game) => game.isAI !== 1);
+      const gameDataRef = await db
+        .collection('games')
+        .where('playerID', '==', id)
+        .where('isAI', '!=', 1)
+        .get();
+      const gameData = gameDataRef.docs.map((doc) => doc.data() as GameData);
 
       if (gameData.length) {
         const promises: Promise<WriteResult>[] = [];
@@ -52,7 +43,6 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
           gameData,
           storedName,
           alias,
-          ftPerc,
           prevRating,
           gpSinceLastRating
         );
@@ -70,7 +60,6 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
               posGameData,
               storedName,
               alias,
-              ftPerc,
               prevRating,
               gpSinceLastRating
             );
@@ -98,7 +87,6 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
             poaDefenderGameData,
             storedName,
             alias,
-            ftPerc,
             prevRating,
             gpSinceLastRating
           );

@@ -1,13 +1,8 @@
 import admin from 'firebase-admin';
 import { log, error } from 'firebase-functions/logger';
-import {
-  calculateAveragePlayerStats,
-  getLeagueData,
-  getPositions,
-  calculatePlayerRating
-} from '../../utils';
+import { calculateAveragePlayerStats, getLeagueData, getPositions } from '../../utils';
 import { GameData, PlayerData } from '../../types';
-import { DEFAULT_FT_PERC, INITIAL_ELO } from '../../constants';
+import { INITIAL_ELO } from '../../constants';
 import { WriteResult } from 'firebase-admin/firestore';
 const GAME_TRIGGER_STATUS_ENUMS = {
   IN_PROGRESS: 'in-progress',
@@ -19,7 +14,7 @@ const GAME_TRIGGER_STATUS_ENUMS = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const upsertPlayerData = async (snapshot: any) => {
   const data: GameData = snapshot.after.data();
-  const { name, gameTrigger } = data;
+  const { name, gameTrigger, playerID } = data;
   log('upsertPlayerData', name, gameTrigger);
   const gameRef = snapshot.after.ref;
 
@@ -30,7 +25,7 @@ export const upsertPlayerData = async (snapshot: any) => {
       gameTrigger?.status === GAME_TRIGGER_STATUS_ENUMS.SUCCESS ||
       gameTrigger?.status === GAME_TRIGGER_STATUS_ENUMS.FAIL
     ) {
-      log('Skipping sendMail trigger.', `status is ${gameTrigger?.status ?? 'undefined'}`);
+      log('Skipping game trigger.', `status is ${gameTrigger?.status ?? 'undefined'}`);
       return;
     }
 
@@ -41,202 +36,112 @@ export const upsertPlayerData = async (snapshot: any) => {
       }
     });
 
-    const playerQuerySnapshot = await db
-      .collection('players')
-      .where('alias', 'array-contains', name)
-      .get();
+    const playerQuerySnapshot = await db.collection('players').doc(playerID).get();
+    if (!playerQuerySnapshot.exists) {
+      error('Player does not exist', playerID, name);
+      return;
+    }
 
     // * Get league data to recalculate PER based on league averages
     const leagueData = await getLeagueData();
 
     // * Query for all game data and overwrite player data to fix data errors and essentially resync data
-    if (playerQuerySnapshot.empty) {
-      // * If player does not exist, create it.
-      // * Create a lowercase alias for the player. Remove duplicates
-      const alias = Array.from(new Set([name, name.toLowerCase()]));
-      const paceAdjustment = leagueData?.pace ? leagueData?.pace / data.pace : data.pace;
-      const { rating, ratingString, ratingMovement, newGPSinceLastRating } = calculatePlayerRating(
-        [data],
-        0,
-        0,
-        leagueData.PER,
-        leagueData.aPER,
-        paceAdjustment
-      );
-      const newPlayer: PlayerData = {
-        name,
-        alias,
-        ftPerc: DEFAULT_FT_PERC,
-        elo: INITIAL_ELO,
-        rating,
-        ratingMovement,
-        ratingString,
-        gpSinceLastRating: newGPSinceLastRating,
-        aPER: data.aPER || 0,
-        uPER: data.uPER || 0,
-        astToRatio: data.ast / data.tov,
-        astPerc: data.astPerc || 0,
-        drebPerc: data.drebPerc || 0,
-        fgPerc: (data.fgm / data.fga) * 100 || 0,
-        twoPerc: (data.twopm / data.twopa) * 100 || 0,
-        threePerc: (data.threepm / data.threepa) * 100 || 0,
-        tsPerc: (data.pts / (2 * (data.fga + 0.44 * data.fta))) * 100 || 0,
-        efgPerc: ((data.fgm + 0.5 * data.threepm) / data.fga) * 100 || 0,
-        threepAR: (data.threepa / data.fga) * 100 || 0,
-        o3PA: data.o3PA || 0,
-        o3PM: data.o3PM || 0,
-        oFGA: data.oFGA || 0,
-        oFGM: data.oFGM || 0,
-        gp: 1,
-        mp: data.mp,
-        pts: data.pts,
-        treb: data.treb,
-        ast: data.ast,
-        stl: data.stl,
-        blk: data.blk,
-        pf: data.pf,
-        tov: data.tov,
-        fgm: data.fgm,
-        fga: data.fga,
-        twopm: data.twopm,
-        twopa: data.twopa,
-        threepm: data.threepm,
-        threepa: data.threepa,
-        ftm: data.ftm,
-        fta: data.fta,
-        oreb: data.oreb,
-        dreb: data.dreb,
-        pace: data.pace,
-        tovPerc: data.tovPerc ?? 0,
-        usageRate: data.usageRate ?? 0,
-        ortg: data.ortg ?? 0,
-        drtg: data.drtg ?? 0,
-        gameScore: data.gameScore ?? 0,
-        dd: data.dd,
-        td: data.td,
-        qd: data.qd,
-        plusMinus: data.plusMinus,
-        PER: data.PER,
-        o3PPerc: (data.o3PM / data.o3PA) * 100 || 0,
-        oFGPerc: (data.oFGM / data.oFGA) * 100 || 0,
-        oEFGPerc: ((data.oFGM + 0.5 * data.o3PM) / data.oFGA) * 100 || 0
-      };
+    const playerData = playerQuerySnapshot.data() as PlayerData;
 
-      await db.collection('players').add({
-        ...newPlayer,
-        _createdAt: admin.firestore.Timestamp.now(),
-        _updatedAt: admin.firestore.Timestamp.now()
-      });
-    } else {
-      // * collect all games by ALIAS includes NAME and use that for the calculate function
-      // * There could theoretically be bad data, and an alias could be in multiple players. Avoid this by taking the first
-      // TODO Error notifications/logs if there are more than one unique alias in someone's aliases?
-      const playerData = playerQuerySnapshot.docs.map((doc) => {
-        return { ...(doc.data() as PlayerData), id: doc.id };
-      })[0];
+    const { name: storedName, alias, rating: prevRating, gpSinceLastRating } = playerData;
 
-      const {
-        name: storedName,
+    // * Only calculate averages once a player has min games played
+    const gameDataRef = await db
+      .collection('games')
+      .where('playerID', '==', playerID)
+      .where('isAI', '!=', 1)
+      .get();
+    const gameData = gameDataRef.docs.map((doc) => doc.data() as GameData);
+
+    if (gameData.length) {
+      const promises: Promise<WriteResult>[] = [];
+      const avgPlayerStats = calculateAveragePlayerStats(
+        leagueData,
+        gameData,
+        storedName,
         alias,
-        ftPerc,
-        id,
-        rating: prevRating,
+        prevRating,
         gpSinceLastRating
-      } = playerData;
+      );
+      avgPlayerStats.positions = getPositions(gameData);
+      avgPlayerStats.elo = playerData?.elo ?? INITIAL_ELO;
 
-      // * Only calculate averages once a player has min games played
-      const gameDataRef = await db.collection('games').where('name', 'in', alias).get();
-      // * Filter by non-AI games
-      const gameData = gameDataRef.docs
-        .map((doc) => doc.data() as GameData)
-        .filter((game) => game.isAI !== 1);
-
-      if (gameData.length) {
-        const promises: Promise<WriteResult>[] = [];
-        const avgPlayerStats = calculateAveragePlayerStats(
-          leagueData,
-          gameData,
-          storedName,
-          alias,
-          ftPerc,
-          prevRating,
-          gpSinceLastRating
-        );
-        avgPlayerStats.positions = getPositions(gameData);
-        avgPlayerStats.elo = playerData?.elo ?? INITIAL_ELO;
-
-        // * For each position, calculate the average stats, then add to player sub-collection. the id of each subcollection is the position number
-        Object.keys(avgPlayerStats.positions).forEach(async (pos) => {
-          // * create a set of games by filtering game data by this position
-          const posGameData = gameData.filter((game) => game.pos === parseInt(pos, 10));
-          if (posGameData.length) {
-            // * calculate the average stats for this position
-            const posPlayerStats = calculateAveragePlayerStats(
-              leagueData,
-              posGameData,
-              storedName,
-              alias,
-              ftPerc,
-              prevRating,
-              gpSinceLastRating
-            );
-            posPlayerStats.elo = playerData?.elo ?? INITIAL_ELO;
-
-            // * add the position to the player subcollection
-            promises.push(
-              db
-                .collection('players')
-                .doc(id)
-                .collection('positions')
-                .doc(pos)
-                .set({
-                  ...posPlayerStats,
-                  _updatedAt: admin.firestore.Timestamp.now()
-                })
-            );
-          }
-        });
-
-        // * Calculate the average stats for the player if they were the poaDefender (oppPos was 1)
-        const poaDefenderGameData = gameData.filter((game) => game.oppPos === 1);
-        if (poaDefenderGameData.length) {
-          const poaDefenderStats = calculateAveragePlayerStats(
+      // * For each position, calculate the average stats, then add to player sub-collection. the id of each subcollection is the position number
+      Object.keys(avgPlayerStats.positions).forEach(async (pos) => {
+        // * create a set of games by filtering game data by this position
+        const posGameData = gameData.filter((game) => game.pos === parseInt(pos, 10));
+        if (posGameData.length) {
+          // * calculate the average stats for this position
+          const posPlayerStats = calculateAveragePlayerStats(
             leagueData,
-            poaDefenderGameData,
+            posGameData,
             storedName,
             alias,
-            ftPerc,
             prevRating,
             gpSinceLastRating
           );
-          poaDefenderStats.elo = playerData?.elo ?? INITIAL_ELO;
+          posPlayerStats.elo = playerData?.elo ?? INITIAL_ELO;
 
+          // * add the position to the player subcollection
           promises.push(
             db
               .collection('players')
-              .doc(id)
-              .collection('poaDefender')
-              .doc('lock')
+              .doc(playerID)
+              .collection('positions')
+              .doc(pos)
               .set({
-                ...poaDefenderStats,
+                ...posPlayerStats,
                 _updatedAt: admin.firestore.Timestamp.now()
               })
           );
         }
-        // * Add the player to the player collection
+      });
+
+      // * Calculate the average stats for the player if they were the poaDefender (oppPos was 1)
+      const poaDefenderGameData = gameData.filter((game) => game.oppPos === 1);
+      if (poaDefenderGameData.length) {
+        const poaDefenderStats = calculateAveragePlayerStats(
+          leagueData,
+          poaDefenderGameData,
+          storedName,
+          alias,
+          prevRating,
+          gpSinceLastRating
+        );
+        poaDefenderStats.elo = playerData?.elo ?? INITIAL_ELO;
+
         promises.push(
           db
             .collection('players')
-            .doc(id)
+            .doc(playerID)
+            .collection('poaDefender')
+            .doc('lock')
             .set({
-              ...avgPlayerStats,
+              ...poaDefenderStats,
               _updatedAt: admin.firestore.Timestamp.now()
             })
         );
-
-        log('creating/updating player from game trigger', storedName, 'aliases', alias);
-        await Promise.all(promises);
       }
+      // * Add the player to the player collection
+      promises.push(
+        db
+          .collection('players')
+          .doc(playerID)
+          .set({
+            ...avgPlayerStats,
+            _updatedAt: admin.firestore.Timestamp.now()
+          })
+      );
+
+      log('updating player from game trigger', storedName, 'aliases', alias);
+      await Promise.all(promises);
+    } else {
+      log('No game data found for player', playerID, storedName, 'aliases', alias);
     }
 
     gameRef.update({
