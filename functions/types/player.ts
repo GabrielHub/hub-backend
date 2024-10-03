@@ -5,7 +5,7 @@ export interface PlayerPositions {
 export interface PlayerData {
   name: string;
   alias: string[];
-  ftPerc: number;
+  ftPerc: number | null;
   pace: number;
   pts: number;
   treb: number;

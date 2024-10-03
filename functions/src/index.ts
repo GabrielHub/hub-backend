@@ -23,7 +23,6 @@ import { fetchPlayerDataByPosition } from '../api/fetchPlayerDataByPosition';
 import fetchLastGame from '../api/fetchLastUploadedGame';
 import { fetchArchive } from '../api/fetchArchive';
 import fetchRelatedGames from '../api/fetchRelatedGames';
-import { generateElo } from '../api/generateElo';
 
 // * Cloud triggers
 import { upsertPlayerData } from '../api/triggers/games';
@@ -68,7 +67,6 @@ app.get('/fetchAwards', cache, fetchAwards);
 app.get('/fetchPlayerDataByPosition', fetchPlayerDataByPosition);
 app.get('/fetchArchive', cache, fetchArchive);
 app.get('/fetchRelatedGames', fetchRelatedGames);
-app.get('/generateElo', checkIfAdmin, generateElo);
 app.get('/deleteDuplicateGames', checkIfAdmin, deleteDuplicateGames);
 
 exports.app = https.onRequest(app);

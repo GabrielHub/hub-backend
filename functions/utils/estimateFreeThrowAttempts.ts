@@ -1,7 +1,7 @@
 import poisson from '@stdlib/random/base/poisson';
 import { warn, error } from 'firebase-functions/logger';
 
-// TODO This sometimes generates a fta that is like 200, make sure this doesn't happen...
+// ! Deprecated. FT data is now stored in the games collection from screenshots
 
 // * Use a binomial distribution to estimate free throws made
 // * We only run this function if ftm is more than 1 (cannot account for missing all free throws)

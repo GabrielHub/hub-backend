@@ -57,13 +57,13 @@ export const calculateNewElo = (
   playerData: RawPlayerData,
   opponents: RawPlayerData[]
 ): number => {
-  if (!playerData.eloComparisonValue || !playerData.uid) return currentRating;
+  if (!playerData.eloComparisonValue || !playerData.playerID) return currentRating;
 
   const sumOfComparisons = opponents.reduce((acc, opponent) => {
-    if (!opponent.eloComparisonValue || !opponent.uid || !playerData.eloComparisonValue) {
+    if (!opponent.eloComparisonValue || !opponent.playerID || !playerData.eloComparisonValue) {
       return acc;
     }
-    const opponentRating = playerMap.get(opponent.uid) || INITIAL_ELO;
+    const opponentRating = playerMap.get(opponent.playerID) || INITIAL_ELO;
     const expected = expectedResult(currentRating, opponentRating);
     const movm = marginOfVictory(
       teamPoints,

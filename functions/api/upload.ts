@@ -1,18 +1,16 @@
 import admin from 'firebase-admin';
 import { log, warn, error } from 'firebase-functions/logger';
+import { Request, Response } from 'express';
 import _ from 'lodash';
 import {
   calculateAPER,
   calculateAdvancedDefensiveStats,
   calculateAdvancedOffensiveStats,
   calculateDoubles,
-  calculateFreeThrowsMade,
   calculateTwoPointers,
-  estimateFreeThrowAttempts,
   getExpectedORebounds,
   getLeagueData
 } from '../utils';
-import { DEFAULT_FT_PERC } from '../constants';
 import { Audit, RawPlayerData, RawTeamData, TotalRawTeamData } from '../types';
 import { addAudit } from '../utils/addAudit';
 import { returnAuthToken } from '../src/auth';
@@ -21,12 +19,7 @@ import { returnAuthToken } from '../src/auth';
 const FG_OREB_PERC = 0.22;
 const THREEP_OREB_PERC = 0.28;
 
-interface PlayerFTData {
-  alias: string;
-  ftPerc: number;
-}
-
-const uploadStats = async (req: any, res: any): Promise<void> => {
+const uploadStats = async (req: Request, res: Response): Promise<void> => {
   const { rawTeamData: uploadRawTeamData, rawPlayerData: uploadRawPlayerData } = req.body;
 
   const rawTeamData: TotalRawTeamData = uploadRawTeamData;
@@ -40,11 +33,6 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
   const formattedTeamData = {};
   const teamReboundData = {};
   const playerReboundData = {};
-  const playerFreeThrowData = {};
-  // * Force all player names to be lowercase
-  rawPlayerData.forEach((player) => {
-    player.name = player.name.trim().toLowerCase();
-  });
 
   log('uploadStats', rawTeamData, rawPlayerData);
   const db = admin.firestore();
@@ -60,43 +48,6 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
 
   // * Fetch league data for PER
   const league = await getLeagueData();
-
-  // * Fetch possible Free Throw data for each player
-  const playerNames = rawPlayerData.map(({ name }) => name);
-  const playerFT: PlayerFTData[] = [];
-  await db
-    .collection('players')
-    .where('alias', 'array-contains-any', playerNames)
-    .get()
-    .then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        const { alias, ftPerc } = doc.data();
-        playerFT.push({ alias, ftPerc });
-      });
-    });
-
-  // * Calculate FTA for each player (must be done before team calculations to get team total FTA)
-  rawPlayerData.forEach((playerData) => {
-    const { fga, fgm, threepa, threepm, pts, name, team } = playerData;
-    // * Estimate FTA
-    const { twopm } = calculateTwoPointers(fga, fgm, threepa, threepm);
-    const ftm = calculateFreeThrowsMade(pts, twopm, threepm);
-    // * We cannot get the FTA without knowing FT%, so find it if the player exists and has a default FT Perc
-    const { ftPerc = DEFAULT_FT_PERC } = playerFT.find(({ alias }) => alias.includes(name)) || {};
-    log('estimating fta for ', { ftPerc, ftm, name });
-    const fta = !ftm ? 0 : estimateFreeThrowAttempts(ftm, ftPerc);
-    // * Name : {fta, team}
-    playerFreeThrowData[name] = { fta, team };
-  });
-  // * Add to sum for the team total
-  const teamFreeThrowData = Object.values(playerFreeThrowData).reduce(
-    (acc: Record<string, number>, player: any) => {
-      const { fta, team } = player;
-      acc[team] = (acc[team] || 0) + fta;
-      return acc;
-    },
-    {} as Record<string, number>
-  );
 
   // * Calculate oreb for both teams first (estimations) then set basic stats
   Object.keys(rawTeamData).forEach((teamKey) => {
@@ -129,14 +80,9 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
       res.status(400).send('No opponent found. Invalid request');
     }
 
-    const { pts, treb, tov, fgm, fga, threepm, threepa } = teamData;
+    const { treb, tov, fgm, fga, threepm, threepa, ftm, fta } = teamData;
 
     const { twopa, twopm } = calculateTwoPointers(fga, fgm, threepa, threepm);
-    // * We cannot get the FTA without knowing FT%, so just calculate FTM
-    const ftm = calculateFreeThrowsMade(pts, twopm, threepm) || 0;
-    // * Add up FTA from previous teamFreeThrowData calculation. This cannot be 0 (set to 1) otherwise we divide by 0
-    const fta = teamFreeThrowData?.[teamKey] || 1;
-    const opFTA = teamFreeThrowData?.[opponent.team] || 1;
 
     const { dreb, oreb } = teamReboundData[teamKey];
     const ORBPerc = oreb / (oreb + teamReboundData[opponent.team].dreb);
@@ -150,7 +96,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
         1.07 * ORBPerc * (fga - fgm) +
         tov +
         (opponent.fga +
-          0.4 * opFTA -
+          0.4 * opponent.fta -
           1.07 * (0 / (0 + treb)) * (opponent.fga - opponent.fgm) +
           opponent.tov));
 
@@ -162,7 +108,7 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     // * Randomly assign offensive rebounds to individual players
     const playersOnTeam = _.shuffle(
       _.filter(rawPlayerData, ({ team, treb }) => {
-        // * Sometimes team is a number... sometimes it's a string ugh
+        // ! Sometimes team is a number... sometimes it's a string ugh
         // eslint-disable-next-line eqeqeq
         return team == teamKey && treb > 0;
       })
@@ -194,8 +140,6 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
       totalPoss,
       twopm,
       twopa,
-      ftm,
-      fta,
       dreb,
       oreb,
       ORBPerc,
@@ -252,8 +196,6 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     const dreb = treb - oreb;
     // * Get 2PM to figure out FTM
     const { twopa, twopm } = calculateTwoPointers(fga, fgm, threepa, threepm);
-    const ftm = calculateFreeThrowsMade(pts, twopm, threepm);
-    const fta = playerFreeThrowData[name]?.fta;
     // * double double, triple doubles, quadruple doubles
     const { dd, td, qd } = calculateDoubles(pts, treb, ast, stl, blk);
 
@@ -267,8 +209,6 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
       oreb,
       twopa,
       twopm,
-      ftm,
-      fta,
       dd,
       td,
       qd
@@ -286,17 +226,17 @@ const uploadStats = async (req: any, res: any): Promise<void> => {
     }
 
     // * Calculate advanced defensive stats
-    const opFTA = playerFreeThrowData[opponent.name]?.fta || 0;
     const { drtg, drebPerc, oFGA, oFGM, o3PA, o3PM } = calculateAdvancedDefensiveStats(
       formattedPlayer,
       opponent,
       opOREB,
-      opFTA,
       team
     );
 
     // * Calculate PER
     const { aPER, PER: playerPER, uPER } = calculateAPER(formattedPlayer, team, league);
+
+    // * Calculate ELO
 
     return {
       ...formattedPlayer,

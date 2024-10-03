@@ -1,30 +1,15 @@
-import { calculateTwoPointers } from './calculateTwoPointers';
-import { calculateFreeThrowsMade } from './calculateFreeThrows';
 import { PlayerData, RawPlayerData, TeamData } from '../types';
 
 export const calculateAdvancedDefensiveStats = (
   player: PlayerData,
   opponent: RawPlayerData,
   opOREB: number,
-  opFTA: number,
   team: TeamData
 ) => {
   // * Calculating advanced defensive stats (we only calculate the advanced stats that require opponent or team numbers)
   // * Stats that do not require opponent or team info we can average elsewhere
 
-  // * Opponent constants
-  const { twopm: opTwoPM } = calculateTwoPointers(
-    opponent.fga,
-    opponent.fgm,
-    opponent.threepa,
-    opponent.threepm
-  );
-  // * We cannot get the FTA without knowing FT%, so just calculate FTM
-  const opFTM = Math.min(
-    calculateFreeThrowsMade(opponent.pts, opTwoPM, opponent.threepm) ?? 0,
-    opFTA
-  );
-  const opFTDivision = opFTA !== 0 ? opFTM / opFTA : 0;
+  const opFTDivision = opponent.fta !== 0 ? opponent.ftm / opponent.fta : 0;
   const opMin = 20;
 
   // Adjust the scaling factor for shorter games
@@ -41,12 +26,12 @@ export const calculateAdvancedDefensiveStats = (
     ((((opponent.fga - opponent.fgm - team.blk) / team.mp) * FMWT * (1 - 1.07 * dorPerc) +
       (opponent.tov - team.stl) / team.mp) *
       player.mp +
-      (player.pf / team.pf) * 0.4 * opFTA * (1 - opFTDivision) ** 2);
+      (player.pf / team.pf) * 0.4 * opponent.fta * (1 - opFTDivision) ** 2);
 
   const stopPerc = (stops * opMin) / (team.totalPoss * player.mp);
   const teamDefensiveRating = 100 * (opponent.pts / team.totalPoss);
   const defensivePtsPerScoringPoss =
-    opponent.pts / (opponent.fgm + (1 - (1 - opFTDivision)) ** 2 * opFTA * 0.4);
+    opponent.pts / (opponent.fgm + (1 - (1 - opFTDivision)) ** 2 * opponent.fta * 0.4);
 
   // * DRTG:  how many points the player allowed per 100 possessions he individually faced while on the court.
   const drtg =

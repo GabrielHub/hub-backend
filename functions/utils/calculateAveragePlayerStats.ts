@@ -31,16 +31,13 @@ export const calculateAveragePlayerStats = (
   gameData: GameData[],
   name: string,
   alias: string[] = [],
-  ftPerc: number,
   prevRating: number,
   gpSinceLastRating: number
 ) => {
   // * These are not values we want to average
-  // * FT% is a constant defined by the user. We won't update this ever programmatically
   const propertiesToSkip = [
     'name',
     'alias',
-    'ftPerc',
     'rating',
     'ratingString',
     'ratingMovement',
@@ -63,7 +60,7 @@ export const calculateAveragePlayerStats = (
     ratingString: '',
     ratingMovement: '',
     gpSinceLastRating,
-    ftPerc,
+    ftPerc: 0,
     pace: 0,
     pts: 0,
     treb: 0,
@@ -159,6 +156,7 @@ export const calculateAveragePlayerStats = (
 
   playerData.gp = gameData.length;
   // * Add Percentage values ie. EFG% TS% OFG% etc.
+  playerData.ftPerc = round(100 * (playerData.ftm / playerData.fta), 1) || null;
   playerData.fgPerc = round(100 * (playerData.fgm / playerData.fga), 1) || null;
   playerData.twoPerc = round(100 * (playerData.twopm / playerData.twopa), 1) || null;
   playerData.threePerc = round(100 * (playerData.threepm / playerData.threepa), 1) || null;

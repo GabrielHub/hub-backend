@@ -35,8 +35,6 @@ const calculateOffensiveRating = (
 };
 
 const calculateDefensiveRating = (data: PlayerData, leagueUsageRate: number): number => {
-  // * data.pace should really be the opponent's pace, but we don't know this
-  // TODO Next year refactor this to include opponent's pace
   const o2PA = data.oFGA - data.o3PA;
   const o2PM = data.oFGM - data.o3PM;
   const matchupMisses = o2PA - o2PM + 1.5 * (data.o3PA - data.o3PM);
