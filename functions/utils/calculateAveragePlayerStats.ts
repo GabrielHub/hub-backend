@@ -8,7 +8,6 @@ import {
   mapTeammateGradeToValue,
   mapTeammateValueToGrade
 } from './teammateGrades';
-import { DEFAULT_FT_PERC } from '../constants';
 
 /**
  * @description complex check for valid stats. ortg and drtg are sometimes 0, but those are not valid numbers
@@ -36,7 +35,6 @@ export const calculateAveragePlayerStats = (
   gpSinceLastRating: number
 ) => {
   // * These are not values we want to average
-  // * FT% is a constant defined by the user. We won't update this ever programmatically
   const propertiesToSkip = [
     'name',
     'alias',
@@ -158,7 +156,7 @@ export const calculateAveragePlayerStats = (
 
   playerData.gp = gameData.length;
   // * Add Percentage values ie. EFG% TS% OFG% etc.
-  playerData.ftPerc = round(100 * (playerData.ftm / playerData.fta), 1) || DEFAULT_FT_PERC;
+  playerData.ftPerc = round(100 * (playerData.ftm / playerData.fta), 1) || null;
   playerData.fgPerc = round(100 * (playerData.fgm / playerData.fga), 1) || null;
   playerData.twoPerc = round(100 * (playerData.twopm / playerData.twopa), 1) || null;
   playerData.threePerc = round(100 * (playerData.threepm / playerData.threepa), 1) || null;
