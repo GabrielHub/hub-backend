@@ -21,21 +21,14 @@ type IRequest = Request & {
 const updatePlayerDetails = async (req: IRequest, res: Response): Promise<void> => {
   // * aliasesToAdd only contains the new aliases to check against the database
   // * alias is the existing alias array
-  const { playerID, ftPerc, alias, aliasesToAdd = [] } = req.body;
-
-  // * Sanitize FT format
-  const formattedFT = parseInt(ftPerc, 10);
+  const { playerID, alias, aliasesToAdd = [] } = req.body;
 
   if (!playerID || typeof playerID !== 'string') {
     throw new Error('Invalid player passed');
   }
 
-  if (!ftPerc || Number.isNaN(formattedFT)) {
-    throw new Error('Invalid ftPerc');
-  }
-
   const db = admin.firestore();
-  log('updatePlayerDetails', playerID, ftPerc, alias, aliasesToAdd);
+  log('updatePlayerDetails', playerID, alias, aliasesToAdd);
 
   if (aliasesToAdd.length) {
     // * Trim inputs for whitespace and validate types
@@ -58,8 +51,7 @@ const updatePlayerDetails = async (req: IRequest, res: Response): Promise<void> 
 
   const aliasesToUpdate = [...alias, ...aliasesToAdd];
   await db.collection('players').doc(playerID).update({
-    alias: aliasesToUpdate,
-    ftPerc: formattedFT
+    alias: aliasesToUpdate
   });
 
   res.send(aliasesToUpdate);
