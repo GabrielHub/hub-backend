@@ -1,53 +1,48 @@
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import admin from 'firebase-admin';
+import { GameData } from '../types';
 
-interface IGameData {
+interface IGameData extends GameData {
   id: string;
-  [key: string]: any; // for the rest of the properties
 }
 
 // * Returns the last number of games for a player (ex. last 5 games played)
-const fetchLastGame = async (req: any, res: Response): Promise<void> => {
+const fetchLastGame = async (req: Request, res: Response): Promise<void> => {
   const { playerID, numOfGames } = req.query;
 
   if (!playerID || typeof playerID !== 'string') {
     throw new Error('Invalid player passed');
   }
 
-  const formattedNumOfGames = parseInt(numOfGames, 10);
+  let formattedNumOfGames: number;
 
-  if (!formattedNumOfGames || typeof formattedNumOfGames !== 'number') {
+  if (typeof numOfGames === 'string') {
+    formattedNumOfGames = parseInt(numOfGames, 10);
+  } else if (typeof numOfGames === 'number') {
+    formattedNumOfGames = numOfGames;
+  } else {
+    formattedNumOfGames = NaN;
+  }
+
+  if (isNaN(formattedNumOfGames)) {
+    // Handle invalid input
     throw new Error('Invalid number of games');
   }
 
   const db = admin.firestore();
-  const playerData = await db
-    .collection('players')
-    .doc(playerID)
-    .get()
-    .then((doc) => {
-      if (doc.exists) {
-        return doc.data();
-      }
-      return null; // Add a return statement for the case when doc does not exist
-    });
-
-  if (!playerData) {
-    throw new Error('Player data does not exist');
-  }
-
   // * Fetch last number of games
   const lastGames: IGameData[] = [];
 
   await db
     .collection('games')
-    .where('name', 'in', playerData.alias)
+    .where('playerID', '==', playerID)
     .orderBy('_updatedAt', 'desc')
     .limit(formattedNumOfGames)
     .get()
     .then((querySnapshot) => {
       querySnapshot.forEach((doc) => {
-        lastGames.push({ ...doc.data(), id: doc.id });
+        const gameData = doc.data() as GameData;
+        lastGames.push({ ...gameData, id: doc.id });
       });
     })
     .catch((error) => {
