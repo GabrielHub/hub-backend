@@ -26,11 +26,13 @@ const fetchForTable = async (req: IRequest, res: Response): Promise<void> => {
   let rank = 1;
 
   try {
-    const querySnapshot = await db
-      .collection('players')
-      .orderBy(sortField, sortType)
-      .limit(limit ?? 10)
-      .get();
+    let query = db.collection('players').orderBy(sortField, sortType);
+
+    if (limit) {
+      query = query.limit(limit);
+    }
+
+    const querySnapshot = await query.get();
 
     querySnapshot.forEach((doc) => {
       const data = doc.data() as PlayerData;
@@ -40,6 +42,7 @@ const fetchForTable = async (req: IRequest, res: Response): Promise<void> => {
       }
     });
   } catch (error) {
+    console.error('Query error:', error);
     throw new Error('Could not query firestore');
   }
 
