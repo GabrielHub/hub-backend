@@ -1,17 +1,20 @@
 import { Request, Response } from 'express';
 import { archiveData } from '../scripts/archiveData';
-import { MOCK_UPLOAD_DATA_ONE } from '../mocks/mockUploadData';
-import uploadStats from './upload';
+import fetchForTableByPosition from './fetchForTableByPosition';
+
+const MOCK_POSITION = '1';
 
 // * Just using this to test some stuff I don't want to set up the firestore emulator for
 const testFirebaseStuff = async (req: Request, res: Response): Promise<void> => {
   // Test uploadStats with mock data
   const mockReq = {
-    body: MOCK_UPLOAD_DATA_ONE
-  } as Request;
+    query: {
+      position: MOCK_POSITION
+    }
+  } as Partial<Request>;
 
   try {
-    await uploadStats(mockReq, res);
+    await fetchForTableByPosition(mockReq as Request, res);
     console.log('uploadStats test completed successfully');
   } catch (error) {
     console.error('Error testing uploadStats:', error);

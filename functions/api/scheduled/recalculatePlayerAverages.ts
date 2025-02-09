@@ -64,6 +64,7 @@ export const recalculatePlayerAverages = async (): Promise<void> => {
               gpSinceLastRating
             );
             posPlayerStats.elo = playerData?.elo ?? INITIAL_ELO;
+            posPlayerStats.position = parseInt(pos, 10);
             // * add the position to the player subcollection
             promises.push(
               db

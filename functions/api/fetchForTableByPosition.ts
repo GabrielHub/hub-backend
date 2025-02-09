@@ -2,21 +2,13 @@ import { Request, Response } from 'express';
 import admin from 'firebase-admin';
 import { PlayerData } from '../types';
 
-interface IRequestBody {
-  position: string;
-}
-
-interface IRequest extends Request {
-  body: IRequestBody;
-}
-
 interface IPlayerData extends PlayerData {
   id: string;
   rank: number;
 }
 
 // * Fetches players for table filtered by position, sorted by rating desc
-const fetchForTableByPosition = async (req: IRequest, res: Response): Promise<void> => {
+const fetchForTableByPosition = async (req: Request, res: Response): Promise<void> => {
   const { position } = req.query;
 
   if (
@@ -36,7 +28,7 @@ const fetchForTableByPosition = async (req: IRequest, res: Response): Promise<vo
   try {
     const querySnapshot = await db
       .collectionGroup('positions')
-      .where(admin.firestore.FieldPath.documentId(), '==', position)
+      .where('position', '==', parseInt(position, 10))
       .orderBy('rating', 'desc')
       .get();
 
@@ -52,7 +44,6 @@ const fetchForTableByPosition = async (req: IRequest, res: Response): Promise<vo
 
     res.send(playerData);
   } catch (error) {
-    console.error('Query error:', error);
     res.status(500).send('Could not query firestore');
     return;
   }

@@ -69,4 +69,6 @@ export interface PlayerData {
   elo?: number;
   win?: number;
   loss?: number;
+  // * Required for sub collection position filtering
+  position?: number;
 }
