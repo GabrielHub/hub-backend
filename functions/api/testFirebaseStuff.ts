@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { archiveData } from '../scripts/archiveData';
 import fetchForTableByPosition from './fetchForTableByPosition';
 
 const MOCK_POSITION = '1';
@@ -19,9 +18,6 @@ const testFirebaseStuff = async (req: Request, res: Response): Promise<void> => 
   } catch (error) {
     console.error('Error testing uploadStats:', error);
   }
-
-  // Original archiveData call
-  await archiveData();
 
   res.status(200).send('Test completed');
 };
