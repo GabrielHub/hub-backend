@@ -13,7 +13,7 @@ const fetchInsightForPlayer = async (req: Request, res: Response) => {
     const db = admin.firestore();
     const insightSnapshot = await db
       .collection('insights')
-      .where('playerId', '==', playerId)
+      .where('playerID', '==', playerId)
       .orderBy('createdAt', 'desc')
       .limit(5)
       .get();
